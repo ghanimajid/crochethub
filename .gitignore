@@ -429,4 +429,4 @@ FodyWeavers.xsd
 *.msp
 
 Backend/CrochetHub/appsettings.json
-BackendCrochetHub/CrochetHub.http
+Backend/CrochetHub/CrochetHub.http

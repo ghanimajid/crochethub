@@ -14,4 +14,3 @@ namespace CrochetHub.Models.Views
         public int PrerequisitesRequired { get; set; }
     }
 }
-}
