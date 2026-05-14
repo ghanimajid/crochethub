@@ -1,6 +1,7 @@
 ﻿using CrochetHub.Models;
 using CrochetHub.Models.Views;
 using Microsoft.EntityFrameworkCore;
+using BC = BCrypt.Net.BCrypt;
 namespace CrochetHub.Data
 {
     public class AppDbContext : DbContext
@@ -56,7 +57,7 @@ namespace CrochetHub.Data
         {
             base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<Person>().ToTable("person");
-            modelBuilder.Entity<User>().ToTable("user");
+            modelBuilder.Entity<User>().ToTable("users");
             modelBuilder.Entity<Student>().ToTable("student");
             modelBuilder.Entity<Instructor>().ToTable("instructor");
             modelBuilder.Entity<Lookup>().ToTable("lookup");
@@ -301,13 +302,93 @@ namespace CrochetHub.Data
             modelBuilder.Entity<Tag>()
                 .HasIndex(t => t.Name)
                 .IsUnique();
+            modelBuilder.Entity<StudentProgressView>()
+               .HasNoKey()
+               .ToView("v_student_progress");
 
+            modelBuilder.Entity<InstructorStatsView>()
+                .HasNoKey()
+                .ToView("v_instructor_stats");
+
+            modelBuilder.Entity<ForumActivityView>()
+                .HasNoKey()
+                .ToView("v_forum_activity");
+
+            modelBuilder.Entity<CoursePrerequisitesView>()
+                .HasNoKey()
+                .ToView("v_course_prerequisites");
+
+            modelBuilder.Entity<PatternDifficultyStatsView>()
+                .HasNoKey()
+                .ToView("v_pattern_difficulty_stats");
+
+            modelBuilder.Entity<StudentNextCoursesView>()
+                .HasNoKey()
+                .ToView("v_student_next_courses");
+
+            // SEED DATA
+            SeedData(modelBuilder);
+
+            /*
             modelBuilder.Entity<StudentProgressView>().ToView("v_student_progress");
             modelBuilder.Entity<InstructorStatsView>().ToView("v_instructor_stats");
             modelBuilder.Entity<ForumActivityView>().ToView("v_forum_activity");
             modelBuilder.Entity<CoursePrerequisitesView>().ToView("v_course_prerequisites");
             modelBuilder.Entity<PatternDifficultyStatsView>().ToView("v_pattern_difficulty_stats");
             modelBuilder.Entity<StudentNextCoursesView>().ToView("v_student_next_courses");
+            */
+        }
+        private void SeedData(ModelBuilder modelBuilder)
+        {
+            // Lookup Data
+            modelBuilder.Entity<Lookup>().HasData(
+                new Lookup { LookupID = 1, Value = "Male", Category = "GENDER" },
+                new Lookup { LookupID = 2, Value = "Female", Category = "GENDER" },
+                new Lookup { LookupID = 3, Value = "Beginner", Category = "DIFFICULTY" },
+                new Lookup { LookupID = 4, Value = "Intermediate", Category = "DIFFICULTY" },
+                new Lookup { LookupID = 5, Value = "Advanced", Category = "DIFFICULTY" },
+                new Lookup { LookupID = 6, Value = "Student", Category = "ROLE" },
+                new Lookup { LookupID = 7, Value = "Instructor", Category = "ROLE" },
+                new Lookup { LookupID = 8, Value = "Admin", Category = "ROLE" },
+                new Lookup { LookupID = 9, Value = "Beginner Help", Category = "FORUM_CATEGORY" },
+                new Lookup { LookupID = 10, Value = "Pattern Sharing", Category = "FORUM_CATEGORY" },
+                new Lookup { LookupID = 11, Value = "Tools and Materials", Category = "FORUM_CATEGORY" },
+                new Lookup { LookupID = 12, Value = "General Discussion", Category = "FORUM_CATEGORY" },
+                new Lookup { LookupID = 13, Value = "Enrollment", Category = "NOTIFICATION_TYPE" },
+                new Lookup { LookupID = 14, Value = "Reply", Category = "NOTIFICATION_TYPE" },
+                new Lookup { LookupID = 15, Value = "Achievement", Category = "NOTIFICATION_TYPE" },
+                new Lookup { LookupID = 16, Value = "System", Category = "NOTIFICATION_TYPE" },
+                new Lookup { LookupID = 17, Value = "INSERT", Category = "ACTION" },
+                new Lookup { LookupID = 18, Value = "UPDATE", Category = "ACTION" },
+                new Lookup { LookupID = 19, Value = "DELETE", Category = "ACTION" }
+            );
+
+            // Admin + user
+            modelBuilder.Entity<Person>().HasData(
+                new Person
+                {
+                    PersonID = 1,
+                    FirstName = "Admin",
+                    LastName = "User",
+                    DateOfBirth = new DateTime(1990, 1, 1),
+                    GenderID = 1,
+                    CreatedAt = new DateTime(2025, 1, 1)
+                }
+            );
+
+            // Admin User
+            modelBuilder.Entity<User>().HasData(
+                new User
+                {
+                    UserID = 1,
+                    Email = "admin@crochethub.com",
+                    PasswordHash = BC.HashPassword("Admin@123"),
+                    ProfilePicture = null,
+                    Bio = null,
+                    RoleID = 8,
+                    CreatedAt = new DateTime(2025, 1, 1)
+                }
+            );
         }
     }
 
