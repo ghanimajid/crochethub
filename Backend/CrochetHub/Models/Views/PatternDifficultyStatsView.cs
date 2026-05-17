@@ -7,7 +7,7 @@ namespace CrochetHub.Models.Views
     {
         public string DifficultyLevel { get; set; } = string.Empty;
         public int PatternCount { get; set; }
-        public decimal AvgRating { get; set; }
+        public decimal? AvgRating { get; set; }
         public int CreatorCount { get; set; }
     }
 }

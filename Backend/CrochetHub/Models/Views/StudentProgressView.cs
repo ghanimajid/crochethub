@@ -11,8 +11,8 @@ namespace CrochetHub.Models.Views
         public int CourseID { get; set; }
         public string CourseName { get; set; } = string.Empty;
         public decimal CompletionPercentage { get; set; }
-        public int TotalLessons { get; set; }
-        public int CompletedLessons { get; set; }
+        public int? TotalLessons { get; set; }
+        public int? CompletedLessons { get; set; }
         public DateTime EnrolledAt { get; set; }
     }
 }
