@@ -1,4 +1,7 @@
 using CrochetHub.Data;
+using CrochetHub.Middlewares;
+using CrochetHub.Repositories;
+using CrochetHub.Repositories.Interfaces;
 using CrochetHub.Services.Implementations;
 using CrochetHub.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -81,7 +84,16 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod());
 });
 
+builder.Services.AddAutoMapper(cfg => { },
+    typeof(Program));
+
+// Services
+builder.Services.AddScoped<ICourseService, CourseService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IAuditService, AuditService>();
+
+// Repositories
+builder.Services.AddScoped<ICourseRepository, CourseRepository>();
 
 var app = builder.Build();
 
@@ -93,6 +105,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("AllowFrontend");
 app.UseHttpsRedirection();
+app.UseMiddleware<ExceptionMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
