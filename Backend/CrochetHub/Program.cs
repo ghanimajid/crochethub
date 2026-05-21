@@ -91,9 +91,13 @@ builder.Services.AddAutoMapper(cfg => { },
 builder.Services.AddScoped<ICourseService, CourseService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAuditService, AuditService>();
+builder.Services.AddScoped<ILessonService, LessonService>();
+builder.Services.AddScoped<IPatternService, PatternService>();
 
 // Repositories
+builder.Services.AddScoped<ILessonRepository, LessonRepository>();
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
+builder.Services.AddScoped<IPatternRepository, PatternRepository>();
 
 var app = builder.Build();
 
