@@ -93,11 +93,15 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<ILessonService, LessonService>();
 builder.Services.AddScoped<IPatternService, PatternService>();
+builder.Services.AddScoped<IForumService, ForumService>();
+
 
 // Repositories
 builder.Services.AddScoped<ILessonRepository, LessonRepository>();
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
 builder.Services.AddScoped<IPatternRepository, PatternRepository>();
+builder.Services.AddScoped<IForumRepository, ForumRepository>();
+
 
 var app = builder.Build();
 
