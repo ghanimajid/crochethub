@@ -27,14 +27,24 @@ namespace CrochetHub.Services.Implementations
             if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
                 return null;
 
-            // check password
             if (!IsStrongPassword(dto.Password))
                 throw new Exception(GetPasswordErrorMessage(dto.Password));
 
-            // Get RoleID from Lookup
+            if (dto.GenderID.HasValue)
+            {
+                var gender = await _context.Lookups
+                    .FirstOrDefaultAsync(l => l.LookupID == dto.GenderID.Value
+                                           && l.Category == "GENDER");
+                if (gender == null)
+                    return null;
+            }
+
             var roleLookup = await _context.Lookups
                 .FirstOrDefaultAsync(l => l.Value == dto.Role && l.Category == "ROLE");
             if (roleLookup == null) return null;
+
+            if (dto.Role == "Admin")
+                return null;
 
             // Create Person
             var person = new Person
@@ -128,6 +138,14 @@ namespace CrochetHub.Services.Implementations
                 .FirstOrDefaultAsync(u => u.UserID == userID);
 
             if (user == null) return false;
+
+            if (dto.GenderID.HasValue)
+            {
+                var gender = await _context.Lookups
+                    .FirstOrDefaultAsync(l => l.LookupID == dto.GenderID.Value
+                                           && l.Category == "GENDER");
+                if (gender == null) return false;
+            }
 
             if (user.Person != null)
             {
