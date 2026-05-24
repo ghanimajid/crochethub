@@ -31,6 +31,7 @@ namespace CrochetHub.Controllers
             var instructor = await _context.Instructors
                 .Include(i => i.User)
                     .ThenInclude(u => u!.Person)
+                        .ThenInclude(p => p!.Gender)
                 .Include(i => i.Courses)
                     .ThenInclude(c => c.Enrollments)
                 .Include(i => i.Courses)
@@ -58,6 +59,8 @@ namespace CrochetHub.Controllers
                 LastName = instructor.User?.Person?.LastName ?? string.Empty,
                 Email = instructor.User?.Email ?? string.Empty,
                 Bio = instructor.Bio,
+                DateOfBirth = instructor.User?.Person?.DateOfBirth,
+                Gender = instructor.User?.Person?.Gender?.Value,
                 ProfilePicture = instructor.User?.ProfilePicture,
                 ExperienceYears = instructor.ExperienceYears,
                 TotalCourses = instructor.Courses.Count,

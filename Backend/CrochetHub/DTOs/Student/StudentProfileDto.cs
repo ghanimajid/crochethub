@@ -8,6 +8,8 @@
         public string Email { get; set; } = string.Empty;
         public string? ProfilePicture { get; set; }
         public string? Bio { get; set; }
+        public DateTime? DateOfBirth { get; set; }
+        public string? Gender { get; set; }
         public DateTime? EnrollmentDate { get; set; }
         public int TotalEnrolled { get; set; }
         public int CompletedCourses { get; set; }

@@ -30,6 +30,7 @@ namespace CrochetHub.Controllers
             var student = await _context.Students
                 .Include(s => s.User)
                     .ThenInclude(u => u!.Person)
+                        .ThenInclude(p => p!.Gender)
                 .Include(s => s.CourseEnrollments)
                 .FirstOrDefaultAsync(s => s.StudentID == userID.Value);
 
@@ -51,6 +52,8 @@ namespace CrochetHub.Controllers
                 Email = student.User?.Email ?? string.Empty,
                 ProfilePicture = student.User?.ProfilePicture,
                 Bio = student.User?.Bio,
+                DateOfBirth = student.User?.Person?.DateOfBirth,
+                Gender = student.User?.Person?.Gender?.Value,
                 EnrollmentDate = student.EnrollmentDate,
                 TotalEnrolled = student.CourseEnrollments.Count,
                 CompletedCourses = completedCourses,
