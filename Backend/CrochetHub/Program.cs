@@ -94,14 +94,14 @@ builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<ILessonService, LessonService>();
 builder.Services.AddScoped<IPatternService, PatternService>();
 builder.Services.AddScoped<IForumService, ForumService>();
-
+builder.Services.AddScoped<ICourseReviewService, CourseReviewService>();
 
 // Repositories
 builder.Services.AddScoped<ILessonRepository, LessonRepository>();
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
 builder.Services.AddScoped<IPatternRepository, PatternRepository>();
 builder.Services.AddScoped<IForumRepository, ForumRepository>();
-
+builder.Services.AddScoped<ICourseReviewRepository, CourseReviewRepository>();
 
 var app = builder.Build();
 
