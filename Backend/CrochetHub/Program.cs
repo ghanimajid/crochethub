@@ -95,6 +95,8 @@ builder.Services.AddScoped<ILessonService, LessonService>();
 builder.Services.AddScoped<IPatternService, PatternService>();
 builder.Services.AddScoped<IForumService, ForumService>();
 builder.Services.AddScoped<ICourseReviewService, CourseReviewService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IFavoriteService, FavoriteService>();
 
 // Repositories
 builder.Services.AddScoped<ILessonRepository, LessonRepository>();
@@ -102,6 +104,8 @@ builder.Services.AddScoped<ICourseRepository, CourseRepository>();
 builder.Services.AddScoped<IPatternRepository, PatternRepository>();
 builder.Services.AddScoped<IForumRepository, ForumRepository>();
 builder.Services.AddScoped<ICourseReviewRepository, CourseReviewRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<IFavoriteRepository, FavoriteRepository>();
 
 var app = builder.Build();
 
