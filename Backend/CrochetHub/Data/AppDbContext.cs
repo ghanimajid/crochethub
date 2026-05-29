@@ -45,6 +45,8 @@ namespace CrochetHub.Data
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
 
+        public DbSet<UserFavoritePattern> UserFavoritePatterns { get; set; }
+
         // viewa
         public DbSet<StudentProgressView> StudentProgressViews { get; set; }
         public DbSet<InstructorStatsView> InstructorStatsViews { get; set; }
@@ -77,6 +79,8 @@ namespace CrochetHub.Data
             modelBuilder.Entity<ForumReply>().ToTable("forumreply");
             modelBuilder.Entity<Notification>().ToTable("notification");
             modelBuilder.Entity<AuditLog>().ToTable("auditlog");
+            modelBuilder.Entity<UserFavoritePattern>().ToTable("userfavoritepattern");
+
             // Person -> User (1-to-1)
             modelBuilder.Entity<User>()
                 .HasOne(u => u.Person)
@@ -292,6 +296,21 @@ namespace CrochetHub.Data
                 .HasForeignKey(al => al.UserID)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<UserFavoritePattern>()
+                .HasKey(uf => new { uf.UserID, uf.PatternID });
+
+            modelBuilder.Entity<UserFavoritePattern>()
+                .HasOne(uf => uf.User)
+                .WithMany(u => u.FavoritePatterns)
+                .HasForeignKey(uf => uf.UserID)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<UserFavoritePattern>()
+                .HasOne(uf => uf.Pattern)
+                .WithMany()
+                .HasForeignKey(uf => uf.PatternID)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // unique constraints 
             // User email unique
             modelBuilder.Entity<User>()
@@ -328,15 +347,6 @@ namespace CrochetHub.Data
 
             // SEED DATA
             SeedData(modelBuilder);
-
-            /*
-            modelBuilder.Entity<StudentProgressView>().ToView("v_student_progress");
-            modelBuilder.Entity<InstructorStatsView>().ToView("v_instructor_stats");
-            modelBuilder.Entity<ForumActivityView>().ToView("v_forum_activity");
-            modelBuilder.Entity<CoursePrerequisitesView>().ToView("v_course_prerequisites");
-            modelBuilder.Entity<PatternDifficultyStatsView>().ToView("v_pattern_difficulty_stats");
-            modelBuilder.Entity<StudentNextCoursesView>().ToView("v_student_next_courses");
-            */
         }
         private void SeedData(ModelBuilder modelBuilder)
         {
