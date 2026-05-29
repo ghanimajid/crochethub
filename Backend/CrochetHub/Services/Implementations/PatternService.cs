@@ -72,6 +72,7 @@ namespace CrochetHub.Services.Implementations
             {
                 Title = dto.Title.Trim(),
                 Description = dto.Description.Trim(),
+                ThumbnailURL = dto.ThumbnailURL?.Trim(),
                 DifficultyID = dto.DifficultyID,
                 CourseID = dto.CourseID,
                 CreatedBy = userID,
@@ -102,7 +103,7 @@ namespace CrochetHub.Services.Implementations
             if (role != "Admin" && pattern.CreatedBy != userID)
                 return (null, "You are not authorized to update this pattern.");
 
-            if (dto.Title == null && dto.Description == null && dto.DifficultyID == null
+            if (dto.Title == null && dto.Description == null && dto.ThumbnailURL == null && dto.DifficultyID == null
                 && dto.CourseID == null && dto.TagIDs == null && dto.Materials == null)
                 return (null, "No fields provided to update.");
 
@@ -157,6 +158,7 @@ namespace CrochetHub.Services.Implementations
             {
                 if (dto.Title != null) p.Title = dto.Title.Trim();
                 if (dto.Description != null) p.Description = dto.Description.Trim();
+                if (dto.ThumbnailURL != null) p.ThumbnailURL = dto.ThumbnailURL.Trim();
                 if (dto.DifficultyID != null) p.DifficultyID = dto.DifficultyID;
                 if (dto.CourseID != null) p.CourseID = dto.CourseID;
             });
@@ -284,6 +286,7 @@ namespace CrochetHub.Services.Implementations
             Title = p.Title,
             Description = p.Description,
             Difficulty = p.Difficulty?.Value,
+            ThumbnailURL = p.ThumbnailURL,
             CourseID = p.CourseID,
             CourseTitle = p.Course?.Title,
             CreatedBy = p.CreatedBy,

@@ -40,5 +40,6 @@ namespace CrochetHub.Models
         public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
         public ICollection<AuditLog> AuditLogs { get; set; } = new List<AuditLog>();
         public ICollection<Pattern> Patterns { get; set; } = new List<Pattern>();
+        public ICollection<UserFavoritePattern> FavoritePatterns { get; set; } = new List<UserFavoritePattern>();
     }
 }

@@ -12,6 +12,8 @@ namespace CrochetHub.DTOs.Pattern
         [StringLength(5000, MinimumLength = 10, ErrorMessage = "Description must be between 10 and 5000 characters.")]
         public string Description { get; set; } = string.Empty;
 
+        public string? ThumbnailURL { get; set; }
+
         public int? DifficultyID { get; set; }
 
         public int? CourseID { get; set; }

@@ -23,6 +23,8 @@ namespace CrochetHub.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        public string? ThumbnailURL { get; set; }
+
         [ForeignKey("DifficultyID")]
         public Lookup? Difficulty { get; set; }
 
