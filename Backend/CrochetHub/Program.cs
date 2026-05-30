@@ -97,7 +97,7 @@ builder.Services.AddScoped<IForumService, ForumService>();
 builder.Services.AddScoped<ICourseReviewService, CourseReviewService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IFavoriteService, FavoriteService>();
-
+builder.Services.AddScoped<IReportService, ReportService>();
 // Repositories
 builder.Services.AddScoped<ILessonRepository, LessonRepository>();
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
