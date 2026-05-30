@@ -445,9 +445,8 @@ export default function RegisterPage() {
                   color: 'var(--text)',
                 }}
               >
-                <option value={1}>Female</option>
-                <option value={2}>Male</option>
-                <option value={3}>Prefer not to say</option>
+                <option value={1}>Male</option>
+                <option value={2}>Female</option>
               </select>
             </div>
 

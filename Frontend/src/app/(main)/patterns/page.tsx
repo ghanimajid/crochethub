@@ -1,74 +1,22 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { apiFetch } from '@/services/api'
+import { useAuth } from '@/context/AuthContext'
 
-const mockPatterns = [
-  {
-    patternId: 1,
-    title: 'Berry Bliss Sweater',
-    difficulty: 'Intermediate',
-    description: 'A cozy oversized sweater with beautiful berry tones and textured stitches.',
-    materialsCount: 4,
-    timeEstimate: '15-20 hours',
-    img: '/images/1.jfif',
-    tags: ['Wearable', 'Winter'],
-    price: '$12.00',
-  },
-  {
-    patternId: 2,
-    title: 'Forest Friends Amigurumi',
-    difficulty: 'Beginner',
-    description: 'A set of adorable woodland creatures — fox, rabbit, and bear — perfect for gifting.',
-    materialsCount: 3,
-    timeEstimate: '6 hours',
-    img: '/images/amigurumi.jpg',
-    tags: ['Amigurumi', 'Gift'],
-    price: 'Free',
-  },
-  {
-    patternId: 3,
-    title: 'Rose Garden Throw',
-    difficulty: 'Advanced',
-    description: 'An heirloom-quality blanket featuring intricate rose motifs in aran weight yarn.',
-    materialsCount: 5,
-    timeEstimate: '40+ hours',
-    img: '/images/rosegarden.jpg',
-    tags: ['Home Decor', 'Blanket'],
-    price: '$24.00',
-  },
-  {
-    patternId: 4,
-    title: 'Sunday Market Tote',
-    difficulty: 'Beginner',
-    description: 'A sturdy and stylish market bag worked in cotton yarn — practical and beautiful.',
-    materialsCount: 2,
-    timeEstimate: '4 hours',
-    img: '/images/tote1.jpg',
-    tags: ['Bag', 'Summer'],
-    price: '$8.00',
-  },
-  {
-    patternId: 5,
-    title: 'Ombre Ridge Beanie',
-    difficulty: 'Intermediate',
-    description: 'A modern beanie featuring a stunning ombre color transition and ridge texture.',
-    materialsCount: 3,
-    timeEstimate: '3 hours',
-    img: '/images/beanie.jpg',
-    tags: ['Hat', 'Winter'],
-    price: '$5.99',
-  },
-  {
-    patternId: 6,
-    title: 'Boho Wall Hanging',
-    difficulty: 'Beginner',
-    description: 'A beautiful geometric wall hanging that combines crochet and macrame elements.',
-    materialsCount: 4,
-    timeEstimate: '5 hours',
-    img: '/images/6.jfif',
-    tags: ['Home Decor', 'Boho'],
-    price: 'Free',
-  },
-]
+
+interface Pattern {
+  patternID: number
+  title: string
+  description: string
+  difficulty: string
+  creatorName: string
+  materials: { materialID: number; materialName: string; quantity: string }[]
+  averageRating: number
+  totalReviews: number
+  createdAt: string
+  thumbnailURL?: string
+}
 
 const difficulties = ['All', 'Beginner', 'Intermediate', 'Advanced']
 
@@ -78,13 +26,61 @@ const difficultyColors: Record<string, { bg: string; color: string }> = {
   Advanced: { bg: '#FEE8E8', color: '#9B2C2C' },
 }
 
+const patternImages = [
+  'https://images.unsplash.com/photo-1609710228159-0fa9bd7c0827?w=600&q=80',
+  'https://images.unsplash.com/photo-1603571370693-2e9b72022e6f?w=600&q=80',
+  'https://images.unsplash.com/photo-1626785774573-4b799315345d?w=600&q=80',
+  'https://images.unsplash.com/photo-1548094990-c16ca90f1f0d?w=600&q=80',
+  'https://images.unsplash.com/photo-1563464720-2b56cef4f87c?w=600&q=80',
+]
+
 export default function PatternsPage() {
+  const [patterns, setPatterns] = useState<Pattern[]>([])
+  const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState('All')
   const [search, setSearch] = useState('')
+  const { isLoggedIn } = useAuth()
+  const [favorites, setFavorites] = useState<number[]>([])
 
-  const filtered = mockPatterns.filter(p => {
+  useEffect(() => {
+    apiFetch('/Pattern')
+      .then(data => setPatterns(Array.isArray(data) ? data : []))
+      .catch(() => setPatterns([]))
+      .finally(() => setLoading(false))
+
+    if (isLoggedIn) {
+      apiFetch('/Favorite')
+        .then(data => {
+          const ids = Array.isArray(data)
+            ? data.map((f: any) => f.patternID)
+            : []
+          setFavorites(ids)
+        })
+        .catch(() => { })
+    }
+  }, [isLoggedIn])
+
+  async function toggleFavorite(e: React.MouseEvent, patternID: number) {
+    e.preventDefault()
+    e.stopPropagation()
+
+    if (!isLoggedIn) return
+
+    try {
+      if (favorites.includes(patternID)) {
+        await apiFetch(`/Favorite/${patternID}`, { method: 'DELETE' })
+        setFavorites(prev => prev.filter(id => id !== patternID))
+      } else {
+        await apiFetch(`/Favorite/${patternID}`, { method: 'POST' })
+        setFavorites(prev => [...prev, patternID])
+      }
+    } catch { }
+  }
+
+  const filtered = patterns.filter(p => {
     const matchesDiff = selected === 'All' || p.difficulty === selected
-    const matchesSearch = p.title.toLowerCase().includes(search.toLowerCase())
+    const matchesSearch = p.title.toLowerCase().includes(search.toLowerCase()) ||
+      p.creatorName?.toLowerCase().includes(search.toLowerCase())
     return matchesDiff && matchesSearch
   })
 
@@ -107,7 +103,7 @@ export default function PatternsPage() {
             fontWeight: '600',
             marginBottom: '12px',
           }}>
-            1,400+ Patterns Available
+            {patterns.length} Patterns Available
           </p>
           <h1 style={{
             fontFamily: 'var(--font-cormorant)',
@@ -127,7 +123,6 @@ export default function PatternsPage() {
             Find your next masterpiece among our hand-crafted guides
           </p>
 
-          {/* Search */}
           <input
             type="text"
             placeholder="Search patterns..."
@@ -146,10 +141,10 @@ export default function PatternsPage() {
               outline: 'none',
               display: 'block',
               marginBottom: '24px',
+              boxSizing: 'border-box',
             }}
           />
 
-          {/* Filters */}
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             {difficulties.map(d => (
               <button
@@ -177,122 +172,163 @@ export default function PatternsPage() {
 
       {/* Pattern Grid */}
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '48px' }}>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '24px',
-        }}>
-          {filtered.map(pattern => (
-            <div key={pattern.patternId} style={{
-              backgroundColor: 'white',
-              borderRadius: '20px',
-              overflow: 'hidden',
-              border: '1px solid var(--border)',
-              cursor: 'pointer',
-            }}>
-              {/* Image */}
-              <div style={{ position: 'relative', height: '220px', overflow: 'hidden' }}>
-                <img
-                  src={pattern.img}
-                  alt={pattern.title}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-                {/* Price badge */}
-                <span style={{
-                  position: 'absolute',
-                  top: '16px',
-                  right: '16px',
-                  backgroundColor: pattern.price === 'Free' ? 'var(--teal)' : 'var(--maroon)',
-                  color: 'white',
-                  padding: '4px 12px',
-                  borderRadius: '100px',
-                  fontFamily: 'var(--font-inter)',
-                  fontSize: '0.75rem',
-                  fontWeight: '600',
-                }}>
-                  {pattern.price}
-                </span>
-              </div>
-
-              {/* Content */}
-              <div style={{ padding: '24px' }}>
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
-                  <span style={{
-                    backgroundColor: difficultyColors[pattern.difficulty]?.bg,
-                    color: difficultyColors[pattern.difficulty]?.color,
-                    padding: '3px 10px',
-                    borderRadius: '100px',
-                    fontFamily: 'var(--font-inter)',
-                    fontSize: '0.7rem',
-                    fontWeight: '600',
-                    letterSpacing: '0.05em',
-                    textTransform: 'uppercase',
-                  }}>
-                    {pattern.difficulty}
-                  </span>
-                  <span style={{
-                    backgroundColor: 'var(--cream)',
-                    color: 'var(--text-muted)',
-                    padding: '3px 10px',
-                    borderRadius: '100px',
-                    fontFamily: 'var(--font-inter)',
-                    fontSize: '0.7rem',
-                    fontWeight: '500',
-                  }}>
-                    {pattern.timeEstimate}
-                  </span>
-                </div>
-
-                <h3 style={{
-                  fontFamily: 'var(--font-cormorant)',
-                  fontSize: '1.3rem',
-                  fontWeight: '600',
-                  color: 'var(--text)',
-                  marginBottom: '8px',
-                  lineHeight: '1.3',
-                }}>
-                  {pattern.title}
-                </h3>
-                <p style={{
-                  fontFamily: 'var(--font-inter)',
-                  fontSize: '0.82rem',
-                  color: 'var(--text-secondary)',
-                  lineHeight: '1.6',
-                  marginBottom: '20px',
-                }}>
-                  {pattern.description}
-                </p>
-
+        {loading ? (
+          <p style={{ fontFamily: 'var(--font-inter)', color: 'var(--text-muted)' }}>
+            Loading patterns...
+          </p>
+        ) : filtered.length === 0 ? (
+          <div style={{
+            textAlign: 'center', padding: '80px',
+            fontFamily: 'var(--font-inter)', color: 'var(--text-muted)',
+          }}>
+            No patterns found
+          </div>
+        ) : (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: '24px',
+          }}>
+            {filtered.map((pattern, index) => (
+              <Link
+                key={pattern.patternID}
+                href={`/patterns/${pattern.patternID}`}
+                style={{ textDecoration: 'none' }}
+              >
                 <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
+                  backgroundColor: 'white',
+                  borderRadius: '20px',
+                  overflow: 'hidden',
+                  border: '1px solid var(--border)',
+                  cursor: 'pointer',
+                  height: '100%',
                 }}>
-                  <span style={{
-                    fontFamily: 'var(--font-inter)',
-                    fontSize: '0.8rem',
-                    color: 'var(--text-muted)',
-                  }}>
-                    {pattern.materialsCount} materials needed
-                  </span>
-                  <button style={{
-                    backgroundColor: 'var(--teal)',
-                    color: 'white',
-                    border: 'none',
-                    padding: '8px 20px',
-                    borderRadius: '100px',
-                    fontFamily: 'var(--font-inter)',
-                    fontSize: '0.82rem',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                  }}>
-                    View Pattern
-                  </button>
+                  {/* Image */}
+                  <div style={{ position: 'relative', height: '220px', overflow: 'hidden' }}>
+                    <img
+                      src={pattern.thumbnailURL || patternImages[index % patternImages.length]}
+                      alt={pattern.title}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      onError={(e) => {
+                        e.currentTarget.src = patternImages[index % patternImages.length]
+                      }}
+                    />
+                    {isLoggedIn && (
+                      <button
+                        onClick={e => toggleFavorite(e, pattern.patternID)}
+                        style={{
+                          position: 'absolute',
+                          top: '16px',
+                          left: '16px',
+                          backgroundColor: 'rgba(255,255,255,0.92)',
+                          border: 'none',
+                          borderRadius: '50%',
+                          width: '36px',
+                          height: '36px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          fontSize: '1rem',
+                        }}
+                      >
+                        {favorites.includes(pattern.patternID) ? '❤️' : '🤍'}
+                      </button>
+                    )}
+                    {pattern.averageRating > 0 && (
+                      <span style={{
+                        position: 'absolute',
+                        top: '16px',
+                        right: '16px',
+                        backgroundColor: 'rgba(255,255,255,0.92)',
+                        padding: '4px 12px',
+                        borderRadius: '100px',
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.75rem',
+                        fontWeight: '600',
+                        color: '#B45309',
+                      }}>
+                        ★ {pattern.averageRating.toFixed(1)}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Content */}
+                  <div style={{ padding: '24px' }}>
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                      <span style={{
+                        backgroundColor: difficultyColors[pattern.difficulty]?.bg || 'var(--cream)',
+                        color: difficultyColors[pattern.difficulty]?.color || 'var(--text-secondary)',
+                        padding: '3px 10px',
+                        borderRadius: '100px',
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.7rem',
+                        fontWeight: '600',
+                        letterSpacing: '0.05em',
+                        textTransform: 'uppercase',
+                      }}>
+                        {pattern.difficulty}
+                      </span>
+                      <span style={{
+                        backgroundColor: 'var(--cream)',
+                        color: 'var(--text-muted)',
+                        padding: '3px 10px',
+                        borderRadius: '100px',
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.7rem',
+                        fontWeight: '500',
+                      }}>
+                        {pattern.materials.length} materials
+                      </span>
+                    </div>
+
+                    <h3 style={{
+                      fontFamily: 'var(--font-cormorant)',
+                      fontSize: '1.3rem',
+                      fontWeight: '600',
+                      color: 'var(--text)',
+                      marginBottom: '8px',
+                      lineHeight: '1.3',
+                    }}>
+                      {pattern.title}
+                    </h3>
+                    <p style={{
+                      fontFamily: 'var(--font-inter)',
+                      fontSize: '0.82rem',
+                      color: 'var(--text-secondary)',
+                      lineHeight: '1.6',
+                      marginBottom: '16px',
+                    }}>
+                      {pattern.description.substring(0, 100)}...
+                    </p>
+
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}>
+                      <p style={{
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.8rem',
+                        color: 'var(--text-muted)',
+                      }}>
+                        by {pattern.creatorName}
+                      </p>
+                      <span style={{
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.78rem',
+                        color: 'var(--teal)',
+                        fontWeight: '500',
+                      }}>
+                        {pattern.totalReviews} reviews
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

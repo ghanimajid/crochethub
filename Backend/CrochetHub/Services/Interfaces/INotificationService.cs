@@ -1,4 +1,4 @@
-﻿using CrochetHub.DTOs.Notificaton;
+﻿using CrochetHub.DTOs.Notification;
 
 namespace CrochetHub.Services.Interfaces
 {

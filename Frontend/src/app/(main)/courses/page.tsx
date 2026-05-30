@@ -1,69 +1,22 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { courseService } from '@/services/courseService'
 
-const mockCourses = [
-  {
-    courseId: 1,
-    title: 'Crochet Fundamentals 101',
-    difficulty: 'Beginner',
-    instructorName: 'Sarah Hook',
-    lessonCount: 8,
-    description: 'Master the slip knot, chain stitch, and single crochet in this calming introduction.',
-    img: '/images/course1.jfif',
-    tags: ['Basics', 'Beginner Friendly'],
-  },
-  {
-    courseId: 2,
-    title: 'Texture & Colorwork',
-    difficulty: 'Intermediate',
-    instructorName: 'Marco Silk',
-    lessonCount: 12,
-    description: 'Learn to combine different yarn weights and stitch heights to create dimensional fabrics.',
-    img: '/images/course2.jfif',
-    tags: ['Colorwork', 'Texture'],
-  },
-  {
-    courseId: 3,
-    title: 'The Perfect Finishing',
-    difficulty: 'Advanced',
-    instructorName: 'Elena Croft',
-    lessonCount: 5,
-    description: 'Professional secrets for blocking, seaming, and weaving in ends for a flawless look.',
-    img: '/images/course3.jfif',
-    tags: ['Finishing', 'Professional'],
-  },
-  {
-    courseId: 4,
-    title: 'Amigurumi Magic',
-    difficulty: 'Beginner',
-    instructorName: 'Yuki Tanaka',
-    lessonCount: 10,
-    description: 'Create adorable stuffed animals and characters using basic crochet techniques.',
-    img: '/images/course4.jfif',
-    tags: ['Amigurumi', 'Fun'],
-  },
-  {
-    courseId: 5,
-    title: 'Granny Squares Mastery',
-    difficulty: 'Intermediate',
-    instructorName: 'Rose Patel',
-    lessonCount: 9,
-    description: 'From classic to modern — learn every variation of the iconic granny square.',
-    img: '/images/course5.jfif',
-    tags: ['Granny Square', 'Classic'],
-  },
-  {
-    courseId: 6,
-    title: 'Wearable Crochet',
-    difficulty: 'Advanced',
-    instructorName: 'Diana Weave',
-    lessonCount: 15,
-    description: 'Design and crochet stunning garments — cardigans, tops, and accessories.',
-    img: '/images/course6.jfif',
-    tags: ['Fashion', 'Wearable'],
-  },
-]
+interface Course {
+  courseID: number
+  title: string
+  description: string
+  difficulty: string
+  instructorID: number
+  instructorName: string
+  thumbnailURL?: string
+  totalLessons: number
+  averageRating: number
+  totalEnrollments: number
+  tags: string[]
+  prerequisites: string[]
+}
 
 const difficulties = ['All', 'Beginner', 'Intermediate', 'Advanced']
 
@@ -74,13 +27,29 @@ const difficultyColors: Record<string, { bg: string; color: string }> = {
 }
 
 export default function CoursesPage() {
+  const [courses, setCourses] = useState<Course[]>([])
+  const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState('All')
   const [search, setSearch] = useState('')
 
-  const filtered = mockCourses.filter(c => {
+  useEffect(() => {
+    async function load() {
+      try {
+        const data = await courseService.getAll()
+        setCourses(data)
+      } catch (err) {
+        console.error('Failed to load courses', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [])
+
+  const filtered = courses.filter(c => {
     const matchesDiff = selected === 'All' || c.difficulty === selected
     const matchesSearch = c.title.toLowerCase().includes(search.toLowerCase()) ||
-      c.instructorName.toLowerCase().includes(search.toLowerCase())
+      c.instructorName?.toLowerCase().includes(search.toLowerCase())
     return matchesDiff && matchesSearch
   })
 
@@ -123,7 +92,6 @@ export default function CoursesPage() {
             Step-by-step guidance for every skill level
           </p>
 
-          {/* Search */}
           <input
             type="text"
             placeholder="Search courses or instructors..."
@@ -145,7 +113,6 @@ export default function CoursesPage() {
             }}
           />
 
-          {/* Filter tabs */}
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             {difficulties.map(d => (
               <button
@@ -162,7 +129,6 @@ export default function CoursesPage() {
                   fontSize: '0.85rem',
                   fontWeight: '500',
                   cursor: 'pointer',
-                  transition: 'all 0.2s',
                 }}
               >
                 {d}
@@ -174,14 +140,24 @@ export default function CoursesPage() {
 
       {/* Course Grid */}
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '48px' }}>
-        {filtered.length === 0 ? (
+        {loading ? (
           <div style={{
             textAlign: 'center',
             padding: '80px',
             fontFamily: 'var(--font-inter)',
             color: 'var(--text-muted)',
           }}>
-            No courses found
+            Loading courses...
+          </div>
+        ) : filtered.length === 0 ? (
+          <div style={{
+            textAlign: 'center',
+            padding: '80px',
+            fontFamily: 'var(--font-inter)',
+            color: 'var(--text-muted)',
+          }}>
+            <p style={{ fontSize: '2rem', marginBottom: '16px' }}>🧶</p>
+            <p>No courses found</p>
           </div>
         ) : (
           <div style={{
@@ -191,8 +167,8 @@ export default function CoursesPage() {
           }}>
             {filtered.map(course => (
               <Link
-                key={course.courseId}
-                href={`/courses/${course.courseId}`}
+                key={course.courseID}
+                href={`/courses/${course.courseID}`}
                 style={{ textDecoration: 'none' }}
               >
                 <div style={{
@@ -201,42 +177,38 @@ export default function CoursesPage() {
                   overflow: 'hidden',
                   border: '1px solid var(--border)',
                   cursor: 'pointer',
-                  transition: 'transform 0.2s, box-shadow 0.2s',
                   height: '100%',
                 }}>
-                  {/* Image */}
-                  <div style={{ position: 'relative', height: '200px', overflow: 'hidden' }}>
-                    <img
-                      src={course.img}
-                      alt={course.title}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                      }}
-                    />
-                    <span style={{
-                      position: 'absolute',
-                      top: '16px',
-                      right: '16px',
-                      backgroundColor: 'rgba(255,255,255,0.92)',
-                      padding: '4px 12px',
-                      borderRadius: '100px',
-                      fontFamily: 'var(--font-inter)',
-                      fontSize: '0.75rem',
-                      fontWeight: '500',
-                      color: 'var(--text)',
-                    }}>
-                      {course.lessonCount} Lessons
-                    </span>
-                  </div>
-
-                  {/* Content */}
-                  <div style={{ padding: '24px' }}>
-                    <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                  <div style={{
+                    height: '200px',
+                    backgroundColor: '#8FA89C',
+                    backgroundImage: course.thumbnailURL ? `url(${course.thumbnailURL})` : undefined,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    justifyContent: 'flex-end',
+                    padding: '16px',
+                  }}>
+                    {course.totalLessons > 0 && (
                       <span style={{
-                        backgroundColor: difficultyColors[course.difficulty]?.bg,
-                        color: difficultyColors[course.difficulty]?.color,
+                        backgroundColor: 'rgba(255,255,255,0.92)',
+                        padding: '4px 12px',
+                        borderRadius: '100px',
+                        fontFamily: 'var(--font-inter)',
+                        fontSize: '0.75rem',
+                        fontWeight: '500',
+                        color: 'var(--text)',
+                      }}>
+                        {course.totalLessons} Lessons
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ padding: '24px' }}>
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                      <span style={{
+                        backgroundColor: difficultyColors[course.difficulty]?.bg || 'var(--cream)',
+                        color: difficultyColors[course.difficulty]?.color || 'var(--text-secondary)',
                         padding: '3px 10px',
                         borderRadius: '100px',
                         fontFamily: 'var(--font-inter)',
@@ -245,21 +217,8 @@ export default function CoursesPage() {
                         letterSpacing: '0.05em',
                         textTransform: 'uppercase',
                       }}>
-                        {course.difficulty}
+                        {course.difficulty || 'General'}
                       </span>
-                      {course.tags.slice(0, 1).map(tag => (
-                        <span key={tag} style={{
-                          backgroundColor: 'var(--cream)',
-                          color: 'var(--text-muted)',
-                          padding: '3px 10px',
-                          borderRadius: '100px',
-                          fontFamily: 'var(--font-inter)',
-                          fontSize: '0.7rem',
-                          fontWeight: '500',
-                        }}>
-                          {tag}
-                        </span>
-                      ))}
                     </div>
                     <h3 style={{
                       fontFamily: 'var(--font-cormorant)',
@@ -276,7 +235,7 @@ export default function CoursesPage() {
                       fontSize: '0.82rem',
                       color: 'var(--text-secondary)',
                       lineHeight: '1.6',
-                      marginBottom: '16px',
+                      marginBottom: '12px',
                     }}>
                       {course.description}
                     </p>
@@ -285,7 +244,7 @@ export default function CoursesPage() {
                       fontSize: '0.8rem',
                       color: 'var(--text-muted)',
                     }}>
-                      by {course.instructorName}
+                      by {course.instructorName || 'Instructor'}
                     </p>
                   </div>
                 </div>

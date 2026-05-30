@@ -1,5 +1,5 @@
 ﻿using CrochetHub.Data;
-using CrochetHub.DTOs.Notificaton;
+using CrochetHub.DTOs.Notification;
 using CrochetHub.Models;
 using CrochetHub.Repositories.Interfaces;
 using CrochetHub.Services.Interfaces;

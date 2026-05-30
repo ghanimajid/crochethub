@@ -1,4 +1,4 @@
-﻿using CrochetHub.DTOs.Notificaton;
+﻿using CrochetHub.DTOs.Notification;
 using CrochetHub.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

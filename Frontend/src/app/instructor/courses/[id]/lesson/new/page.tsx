@@ -1,45 +1,37 @@
 'use client'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
-import { useAuth } from '@/context/AuthContext'
 import { apiFetch } from '@/services/api'
 
-const categories = [
-  { label: 'Beginner Help', id: 9 },
-  { label: 'Pattern Sharing', id: 10 },
-  { label: 'Tools and Materials', id: 11 },
-  { label: 'General Discussion', id: 12 },
-]
-
-export default function NewThreadPage() {
-  const { isLoggedIn } = useAuth()
+export default function NewLessonPage() {
+  const { id } = useParams()
   const router = useRouter()
   const [title, setTitle] = useState('')
+  const [videoURL, setVideoURL] = useState('')
   const [content, setContent] = useState('')
-  const [categoryID, setCategoryID] = useState(12)
+  const [sequenceOrder, setSequenceOrder] = useState(1)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  async function handleSubmit() {
-    if (!title || !content) {
-      setError('Please fill in all fields')
-      return
-    }
-    if (!isLoggedIn) {
-      router.push('/login')
-      return
-    }
+  async function handleCreate() {
+    if (!title) { setError('Title is required'); return }
     setLoading(true)
     setError('')
     try {
-      await apiFetch('/Forum', {
+      await apiFetch('/Lesson', {
         method: 'POST',
-        body: JSON.stringify({ title, content, categoryID }),
+        body: JSON.stringify({
+          courseID: Number(id),
+          title,
+          videoURL,
+          content,
+          sequenceOrder,
+        }),
       })
-      router.push('/forum')
+      router.push('/instructor/dashboard')
     } catch {
-      setError('Failed to create thread. Please try again.')
+      setError('Failed to create lesson. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -49,7 +41,7 @@ export default function NewThreadPage() {
     <div style={{ backgroundColor: 'var(--cream)', minHeight: '100vh' }}>
       <div style={{ maxWidth: '720px', margin: '0 auto', padding: '60px 48px' }}>
 
-        <Link href="/forum" style={{
+        <Link href="/instructor/dashboard" style={{
           fontFamily: 'var(--font-inter)',
           fontSize: '0.85rem',
           color: 'var(--text-muted)',
@@ -57,7 +49,7 @@ export default function NewThreadPage() {
           display: 'inline-block',
           marginBottom: '32px',
         }}>
-          ← Back to Forum
+          ← Back to Dashboard
         </Link>
 
         <h1 style={{
@@ -67,14 +59,14 @@ export default function NewThreadPage() {
           color: 'var(--text)',
           marginBottom: '8px',
         }}>
-          New Thread
+          Add New Lesson
         </h1>
         <p style={{
           fontFamily: 'var(--font-inter)',
           color: 'var(--text-muted)',
           marginBottom: '40px',
         }}>
-          Share something with the community
+          Course ID: {id}
         </p>
 
         {error && (
@@ -101,42 +93,6 @@ export default function NewThreadPage() {
           flexDirection: 'column',
           gap: '24px',
         }}>
-          {/* Category */}
-          <div>
-            <label style={{
-              display: 'block',
-              fontFamily: 'var(--font-inter)',
-              fontSize: '0.8rem',
-              fontWeight: '500',
-              color: 'var(--text-secondary)',
-              marginBottom: '10px',
-            }}>
-              Category
-            </label>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {categories.map(cat => (
-                <button
-                  key={cat.id}
-                  onClick={() => setCategoryID(cat.id)}
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: '100px',
-                    border: '1.5px solid',
-                    borderColor: categoryID === cat.id ? 'var(--teal)' : 'var(--border)',
-                    backgroundColor: categoryID === cat.id ? 'var(--teal)' : 'white',
-                    color: categoryID === cat.id ? 'white' : 'var(--text-secondary)',
-                    fontFamily: 'var(--font-inter)',
-                    fontSize: '0.82rem',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {cat.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Title */}
           <div>
             <label style={{
@@ -147,13 +103,74 @@ export default function NewThreadPage() {
               color: 'var(--text-secondary)',
               marginBottom: '8px',
             }}>
-              Thread Title
+              Lesson Title *
             </label>
             <input
               type="text"
-              placeholder="What's your question or topic?"
               value={title}
               onChange={e => setTitle(e.target.value)}
+              placeholder="e.g. Introduction to the Magic Ring"
+              style={{
+                width: '100%',
+                padding: '12px 14px',
+                backgroundColor: 'white',
+                border: '1.5px solid var(--border)',
+                borderRadius: '10px',
+                fontFamily: 'var(--font-inter)',
+                fontSize: '0.9rem',
+                outline: 'none',
+                boxSizing: 'border-box',
+              }}
+            />
+          </div>
+
+          {/* Sequence Order */}
+          <div>
+            <label style={{
+              display: 'block',
+              fontFamily: 'var(--font-inter)',
+              fontSize: '0.8rem',
+              fontWeight: '500',
+              color: 'var(--text-secondary)',
+              marginBottom: '8px',
+            }}>
+              Lesson Number
+            </label>
+            <input
+              type="number"
+              value={sequenceOrder}
+              onChange={e => setSequenceOrder(Number(e.target.value))}
+              min={1}
+              style={{
+                width: '120px',
+                padding: '12px 14px',
+                backgroundColor: 'white',
+                border: '1.5px solid var(--border)',
+                borderRadius: '10px',
+                fontFamily: 'var(--font-inter)',
+                fontSize: '0.9rem',
+                outline: 'none',
+              }}
+            />
+          </div>
+
+          {/* Video URL */}
+          <div>
+            <label style={{
+              display: 'block',
+              fontFamily: 'var(--font-inter)',
+              fontSize: '0.8rem',
+              fontWeight: '500',
+              color: 'var(--text-secondary)',
+              marginBottom: '8px',
+            }}>
+              Video URL
+            </label>
+            <input
+              type="text"
+              value={videoURL}
+              onChange={e => setVideoURL(e.target.value)}
+              placeholder="https://youtube.com/watch?v=..."
               style={{
                 width: '100%',
                 padding: '12px 14px',
@@ -178,12 +195,12 @@ export default function NewThreadPage() {
               color: 'var(--text-secondary)',
               marginBottom: '8px',
             }}>
-              Content
+              Lesson Content / Notes
             </label>
             <textarea
-              placeholder="Share your thoughts, question, or project..."
               value={content}
               onChange={e => setContent(e.target.value)}
+              placeholder="Write lesson notes, instructions, or descriptions here..."
               rows={6}
               style={{
                 width: '100%',
@@ -202,7 +219,7 @@ export default function NewThreadPage() {
           </div>
 
           <button
-            onClick={handleSubmit}
+            onClick={handleCreate}
             disabled={loading}
             style={{
               padding: '14px 32px',
@@ -217,7 +234,7 @@ export default function NewThreadPage() {
               alignSelf: 'flex-start',
             }}
           >
-            {loading ? 'Posting...' : 'Post Thread →'}
+            {loading ? 'Saving...' : 'Add Lesson →'}
           </button>
         </div>
       </div>

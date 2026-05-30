@@ -15,8 +15,15 @@ export async function apiFetch(endpoint: string, options?: RequestInit) {
   })
 
   if (!response.ok) {
-    throw new Error(`API error: ${response.status}`)
+  const text = await response.text()
+  if (response.status !== 404) {
+    console.error('API error status:', response.status)
+    console.error('API error body:', text)
   }
+  throw new Error(text || `HTTP ${response.status}`)
+}
 
-  return response.json()
+  const text = await response.text()
+  if (!text) return {}
+  return JSON.parse(text)
 }
