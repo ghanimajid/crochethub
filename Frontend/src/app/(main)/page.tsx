@@ -14,34 +14,44 @@ export default function HomePage() {
   } | null>(null)
   const [featuredCourses, setFeaturedCourses] = useState<any[]>([])
   const [savedPatternsCount, setSavedPatternsCount] = useState(0)
+  const [allCourses, setAllCourses] = useState<any[]>([])
+
 
   useEffect(() => {
-    if (isLoggedIn && user?.role === 'Instructor') {
-      router.replace('/instructor/dashboard')
-      return
-    }
-    if (isLoggedIn && user?.role === 'Admin') {
-      router.replace('/admin/dashboard')
-      return
-    }
-    if (isLoggedIn && user?.role !== 'Instructor' && user?.role !== 'Admin') {
-      Promise.all([
-        studentService.getDashboard(),
-        fetch('https://localhost:7167/api/Course').then(r => r.json())
-      ])
-        .then(([dashData, coursesData]) => {
-          const courses = Array.isArray(coursesData) ? coursesData : []
-          if (dashData?.enrolledCourses) {
-            dashData.enrolledCourses = dashData.enrolledCourses.map((e: any) => {
-              const full = courses.find((c: any) => c.courseID === e.courseID)
-              return { ...e, thumbnailURL: full?.thumbnailURL || '' }
-            })
-          }
-          setDashboard(dashData)
-        })
+
+    if (isLoggedIn) {
+      fetch('https://localhost:7167/api/Course')
+        .then(r => r.json())
+        .then(data =>
+          setFeaturedCourses(Array.isArray(data) ? data.slice(0, 3) : [])
+        )
         .catch(() => { })
-      // fetch saved patterns count
-      if (isLoggedIn && user?.role !== 'Instructor') {
+
+      if (user?.role === 'Student') {
+        Promise.all([
+          studentService.getDashboard(),
+          fetch('https://localhost:7167/api/Course').then(r => r.json())
+        ])
+          .then(([dashData, coursesData]) => {
+            const courses = Array.isArray(coursesData) ? coursesData : []
+
+            if (dashData?.enrolledCourses) {
+              dashData.enrolledCourses = dashData.enrolledCourses.map((e: any) => {
+                const full = courses.find(
+                  (c: any) => c.courseID === e.courseID
+                )
+
+                return {
+                  ...e,
+                  thumbnailURL: full?.thumbnailURL || ''
+                }
+              })
+            }
+
+            setDashboard(dashData)
+          })
+          .catch(() => { })
+
         fetch('https://localhost:7167/api/Favorite', {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -53,18 +63,411 @@ export default function HomePage() {
           )
           .catch(() => { })
       }
+    } else {
+      fetch('https://localhost:7167/api/Course')
+        .then(r => r.json())
+        .then(data =>
+          setFeaturedCourses(Array.isArray(data) ? data.slice(0, 3) : [])
+        )
+        .catch(() => { })
     }
-    // always fetch featured courses for landing page
     fetch('https://localhost:7167/api/Course')
       .then(r => r.json())
-      .then(data => setFeaturedCourses(Array.isArray(data) ? data.slice(0, 3) : []))
-      .catch(() => { })
+      .then(data => {
+        if (Array.isArray(data)) {
+          setAllCourses(data)
+          setFeaturedCourses(data.slice(0, 3))
+        }
+      })
   }, [isLoggedIn, user, router])
 
   if (isLoggedIn) {
     if (!user) return null
-    if (user.role === 'Instructor') return null
-    if (user.role === 'Admin') return null
+
+    // INSTRUCTOR HOME PAGE
+    if (user.role === 'Instructor') {
+      return (
+        <div style={{ backgroundColor: 'var(--cream)', minHeight: '100vh' }}>
+          <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '48px' }}>
+
+            {/* Bento grid */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr 1fr',
+              gridTemplateRows: 'auto auto',
+              gap: '16px',
+              marginBottom: '40px',
+            }}>
+
+              {/* Hero card */}
+              <div style={{
+                gridColumn: '1 / 3',
+                backgroundColor: '#2D6B5E',
+                borderRadius: '20px',
+                padding: '32px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '24px',
+                position: 'relative',
+                overflow: 'hidden',
+              }}>
+                <div style={{
+                  position: 'absolute', right: '-20px', top: '-20px',
+                  width: '180px', height: '180px', borderRadius: '50%',
+                  backgroundColor: 'rgba(255,255,255,0.06)',
+                }} />
+                <div style={{
+                  width: '72px', height: '72px', borderRadius: '50%',
+                  border: '3px solid rgba(255,255,255,0.3)', flexShrink: 0,
+                  overflow: 'hidden', backgroundColor: '#4A9B8E',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  {(user as any)?.profilePicture ? (
+                    <img src={(user as any).profilePicture} alt="Profile"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                      <circle cx="18" cy="13" r="7" stroke="white" strokeWidth="1.8" fill="none" />
+                      <path d="M4 32c0-7.7 6.3-14 14-14s14 6.3 14 14" stroke="white" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+                    </svg>
+                  )}
+                </div>
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  <h2 style={{
+                    fontFamily: 'var(--font-cormorant)', fontSize: '1.8rem',
+                    fontWeight: '700', color: 'white', marginBottom: '4px',
+                  }}>
+                    Welcome back, {user?.firstName}
+                  </h2>
+                  <p style={{ fontFamily: 'var(--font-inter)', fontSize: '0.875rem', color: 'rgba(255,255,255,0.7)' }}>
+                    Instructor · CrochetHub
+                  </p>
+                  <div style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                    backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: '100px',
+                    padding: '5px 12px', fontFamily: 'var(--font-inter)',
+                    fontSize: '0.75rem', color: 'rgba(255,255,255,0.85)', marginTop: '12px',
+                  }}>
+                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#7ECFBE' }} />
+                    Active instructor
+                  </div>
+                </div>
+              </div>
+
+              {/* Rating card */}
+              <div style={{
+                gridColumn: '3', gridRow: '1 / 3',
+                backgroundColor: 'var(--cream-light)', borderRadius: '20px',
+                border: '1px solid var(--border)', padding: '24px',
+                display: 'flex', flexDirection: 'column',
+              }}>
+                <p style={{
+                  fontFamily: 'var(--font-inter)', fontSize: '0.7rem',
+                  color: 'var(--text-muted)', letterSpacing: '0.1em',
+                  textTransform: 'uppercase', marginBottom: '16px',
+                }}>
+                  Overall rating
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '8px 0 16px' }}>
+                  <p style={{
+                    fontFamily: 'var(--font-cormorant)', fontSize: '3.5rem',
+                    fontWeight: '700', color: '#7C2D3E', lineHeight: '1',
+                  }}>
+                    {(user as any)?.overallRating > 0 ? (user as any).overallRating.toFixed(1) : '—'}
+                  </p>
+                  <p style={{ fontFamily: 'var(--font-inter)', fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '8px' }}>
+                    {(user as any)?.overallRating > 0 ? '★★★★★' : 'No ratings yet'}
+                  </p>
+                </div>
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: 'auto' }}>
+                  <p style={{
+                    fontFamily: 'var(--font-inter)', fontSize: '0.7rem',
+                    color: 'var(--text-muted)', letterSpacing: '0.1em',
+                    textTransform: 'uppercase', marginBottom: '4px',
+                  }}>
+                    Experience
+                  </p>
+                  <p style={{ fontFamily: 'var(--font-cormorant)', fontSize: '1.8rem', fontWeight: '700', color: 'var(--text)' }}>
+                    {(user as any)?.experienceYears || 0} years
+                  </p>
+                </div>
+              </div>
+
+              {/* Quick stat 1 */}
+              <div style={{ backgroundColor: 'var(--cream-light)', borderRadius: '20px', border: '1px solid var(--border)', padding: '24px' }}>
+                <p style={{ fontFamily: 'var(--font-inter)', fontSize: '0.7rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>
+                  My Courses
+                </p>
+                <p style={{ fontFamily: 'var(--font-cormorant)', fontSize: '2.2rem', fontWeight: '700', color: 'var(--teal)' }}>
+                  {allCourses.filter(
+                    (c: any) => c.instructorName === `${user.firstName} ${user.lastName}`
+                  ).length}                </p>
+                <Link
+                  href="/instructor/dashboard"
+                  style={{
+                    fontFamily: 'var(--font-inter)',
+                    fontSize: '0.78rem',
+                    color: 'var(--text-muted)',
+                    marginTop: '4px',
+                    display: 'inline-block',
+                    textDecoration: 'none'
+                  }}
+                >
+                  View in dashboard →
+                </Link>
+              </div>
+
+              {/* Quick stat 2 */}
+              <div style={{ backgroundColor: 'var(--cream-light)', borderRadius: '20px', border: '1px solid var(--border)', padding: '24px' }}>
+                <p style={{ fontFamily: 'var(--font-inter)', fontSize: '0.7rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>
+                  Total Students
+                </p>
+                <p style={{ fontFamily: 'var(--font-cormorant)', fontSize: '2.2rem', fontWeight: '700', color: 'var(--maroon)' }}>
+  {allCourses
+    .filter((c: any) => c.instructorName === `${user.firstName} ${user.lastName}`)
+    .reduce((acc: number, c: any) => acc + (c.enrolledStudents || c.studentCount || c.totalEnrollments || 0), 0)
+  }
+</p>
+                <p style={{ fontFamily: 'var(--font-inter)', fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                  Across all courses
+                </p>
+              </div>
+            </div>
+
+            {/* Quick links */}
+            <h2 style={{ fontFamily: 'var(--font-cormorant)', fontSize: '2rem', fontWeight: '700', color: 'var(--text)', marginBottom: '20px' }}>
+              Quick Links
+            </h2>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '40px' }}>
+              {[
+                { label: 'Teach', title: 'My Dashboard', href: '/instructor/dashboard', color: '#7C2D3E' },
+                { label: 'Create', title: 'New Course', href: '/instructor/courses/new', color: 'var(--teal)' },
+                { label: 'Connect', title: 'Community Forum', href: '/forum', color: '#5C1F2E' },
+              ].map((item, i) => (
+                <Link key={i} href={item.href} style={{ textDecoration: 'none' }}>
+                  <div style={{
+                    backgroundColor: 'var(--cream-light)', border: '1px solid var(--border)',
+                    borderRadius: '20px', padding: '24px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  }}>
+                    <div>
+                      <p style={{ fontFamily: 'var(--font-inter)', fontSize: '0.7rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '6px' }}>
+                        {item.label}
+                      </p>
+                      <p style={{ fontFamily: 'var(--font-cormorant)', fontSize: '1.3rem', fontWeight: '600', color: 'var(--text)' }}>
+                        {item.title}
+                      </p>
+                    </div>
+                    <span style={{
+                      backgroundColor: item.color, color: 'white',
+                      padding: '8px 20px', borderRadius: '100px',
+                      fontFamily: 'var(--font-inter)', fontSize: '0.82rem', fontWeight: '500',
+                      whiteSpace: 'nowrap',
+                    }}>
+                      Go →
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            {/* Featured courses */}
+            <h2 style={{ fontFamily: 'var(--font-cormorant)', fontSize: '2rem', fontWeight: '700', color: 'var(--text)', marginTop: '40px', marginBottom: '20px' }}>
+              Browse All Courses
+            </h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+              {featuredCourses.map((course: any) => (
+                <Link key={course.courseID} href={`/courses/${course.courseID}`} style={{ textDecoration: 'none' }}>
+                  <div style={{ backgroundColor: 'white', borderRadius: '16px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+                    <div style={{
+                      height: '160px', backgroundColor: '#8FA89C',
+                      backgroundImage: course.thumbnailURL ? `url(${course.thumbnailURL})` : undefined,
+                      backgroundSize: 'cover', backgroundPosition: 'center',
+                    }} />
+                    <div style={{ padding: '16px' }}>
+                      <p style={{ fontFamily: 'var(--font-cormorant)', fontSize: '1.1rem', fontWeight: '600', color: 'var(--text)', marginBottom: '4px' }}>
+                        {course.title}
+                      </p>
+                      <p style={{ fontFamily: 'var(--font-inter)', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                        {course.difficulty} · by {course.instructorName}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      )
+    }
+    // ADMIN HOME PAGE
+    if (user.role === 'Admin') {
+      return (
+        <div style={{ backgroundColor: 'var(--cream)', minHeight: '100vh' }}>
+          <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '48px' }}>
+
+            {/* Bento grid */}
+            <div style={{
+              display: 'grid', gridTemplateColumns: '1fr 1fr 1fr',
+              gridTemplateRows: 'auto auto', gap: '16px', marginBottom: '40px',
+            }}>
+
+              {/* Hero card */}
+              <div style={{
+                gridColumn: '1 / 3',
+                backgroundColor: '#2D6B5E',
+                borderRadius: '20px', padding: '32px',
+                display: 'flex', alignItems: 'center', gap: '24px',
+                position: 'relative', overflow: 'hidden',
+              }}>
+                <div style={{
+                  position: 'absolute', right: '-20px', top: '-20px',
+                  width: '180px', height: '180px', borderRadius: '50%',
+                  backgroundColor: 'rgba(255,255,255,0.06)',
+                }} />
+                <div style={{
+                  width: '72px', height: '72px', borderRadius: '50%',
+                  border: '3px solid rgba(255,255,255,0.3)',
+                  backgroundColor: '#2D6B5E', flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                    <circle cx="18" cy="13" r="7" stroke="white" strokeWidth="1.8" fill="none" />
+                    <path d="M4 32c0-7.7 6.3-14 14-14s14 6.3 14 14" stroke="white" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+                  </svg>
+                </div>
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  <h2 style={{ fontFamily: 'var(--font-cormorant)', fontSize: '1.8rem', fontWeight: '700', color: 'white', marginBottom: '4px' }}>
+                    Welcome back, {user?.firstName}
+                  </h2>
+                  <p style={{ fontFamily: 'var(--font-inter)', fontSize: '0.875rem', color: 'rgba(255,255,255,0.7)' }}>
+                    Administrator · CrochetHub
+                  </p>
+                  <div style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                    backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: '100px',
+                    padding: '5px 12px', fontFamily: 'var(--font-inter)',
+                    fontSize: '0.75rem', color: 'rgba(255,255,255,0.85)', marginTop: '12px',
+                  }}>
+                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#E8A0A8' }} />
+                    All systems active
+                  </div>
+                </div>
+              </div>
+
+              {/* Platform status card */}
+              <div style={{
+                gridColumn: '3', gridRow: '1 / 3',
+                backgroundColor: 'var(--cream-light)', borderRadius: '20px',
+                border: '1px solid var(--border)', padding: '24px',
+                display: 'flex', flexDirection: 'column',
+              }}>
+                <p style={{
+                  fontFamily: 'var(--font-inter)', fontSize: '0.7rem',
+                  color: 'var(--text-muted)', letterSpacing: '0.1em',
+                  textTransform: 'uppercase', marginBottom: '16px',
+                }}>
+                  Platform
+                </p>
+
+                {/* Courses count — big number like the rating card */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '8px 0 16px' }}>
+                  <p style={{
+                    fontFamily: 'var(--font-cormorant)', fontSize: '3.5rem',
+                    fontWeight: '700', color: 'var(--teal)', lineHeight: '1',
+                  }}>
+                    {allCourses.length}+
+                  </p>
+                  <p style={{
+                    fontFamily: 'var(--font-inter)', fontSize: '0.78rem',
+                    color: 'var(--text-muted)', marginTop: '8px',
+                  }}>
+                    courses available
+                  </p>
+                </div>
+
+                {/* Divider + Status */}
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: 'auto' }}>
+                  <p style={{
+                    fontFamily: 'var(--font-inter)', fontSize: '0.7rem',
+                    color: 'var(--text-muted)', letterSpacing: '0.1em',
+                    textTransform: 'uppercase', marginBottom: '4px',
+                  }}>
+                    Status
+                  </p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#4A9B8E', flexShrink: 0 }} />
+                    <p style={{ fontFamily: 'var(--font-cormorant)', fontSize: '1.8rem', fontWeight: '700', color: 'var(--text)' }}>
+                      Active
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Stat 1 */}
+              <div style={{ backgroundColor: 'var(--cream-light)', borderRadius: '20px', border: '1px solid var(--border)', padding: '24px' }}>
+                <p style={{ fontFamily: 'var(--font-inter)', fontSize: '0.7rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>
+                  Admin Panel
+                </p>
+                <p style={{ fontFamily: 'var(--font-cormorant)', fontSize: '1.5rem', fontWeight: '700', color: 'var(--teal)', lineHeight: '1.2' }}>
+                  Manage Users
+                </p>
+                <Link href="/admin/users" style={{ fontFamily: 'var(--font-inter)', fontSize: '0.78rem', color: 'var(--teal)', textDecoration: 'none', marginTop: '8px', display: 'inline-block' }}>
+                  Go to users →
+                </Link>
+              </div>
+
+              {/* Stat 2 */}
+              <div style={{ backgroundColor: 'var(--cream-light)', borderRadius: '20px', border: '1px solid var(--border)', padding: '24px' }}>
+                <p style={{ fontFamily: 'var(--font-inter)', fontSize: '0.7rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>
+                  Moderation
+                </p>
+                <p style={{ fontFamily: 'var(--font-cormorant)', fontSize: '1.5rem', fontWeight: '700', color: 'var(--maroon)', lineHeight: '1.2' }}>
+                  Forum & Content
+                </p>
+                <Link href="/admin/forum" style={{ fontFamily: 'var(--font-inter)', fontSize: '0.78rem', color: 'var(--maroon)', textDecoration: 'none', marginTop: '8px', display: 'inline-block' }}>
+                  Go to forum →
+                </Link>
+              </div>
+            </div>
+
+            {/* Quick links */}
+            <h2 style={{ fontFamily: 'var(--font-cormorant)', fontSize: '2rem', fontWeight: '700', color: 'var(--text)', marginBottom: '20px' }}>
+              Quick Links
+            </h2>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '16px' }}>
+              {[
+                { label: 'Admin', title: 'Dashboard', href: '/admin/dashboard', color: '#7C2D3E' },
+                { label: 'Manage', title: 'Users', href: '/admin/users', color: 'var(--teal)' },
+                { label: 'Manage', title: 'Courses', href: '/admin/courses', color: '#2D6B5E' },
+                { label: 'Moderate', title: 'Forum', href: '/admin/forum', color: '#5C1F2E' },
+              ].map((item, i) => (
+                <Link key={i} href={item.href} style={{ textDecoration: 'none' }}>
+                  <div style={{
+                    backgroundColor: 'var(--cream-light)', border: '1px solid var(--border)',
+                    borderRadius: '20px', padding: '24px',
+                  }}>
+                    <p style={{ fontFamily: 'var(--font-inter)', fontSize: '0.7rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>
+                      {item.label}
+                    </p>
+                    <p style={{ fontFamily: 'var(--font-cormorant)', fontSize: '1.1rem', fontWeight: '600', color: 'var(--text)', marginBottom: '12px' }}>
+                      {item.title}
+                    </p>
+                    <span style={{
+                      display: 'inline-block', backgroundColor: item.color, color: 'white',
+                      padding: '6px 16px', borderRadius: '100px',
+                      fontFamily: 'var(--font-inter)', fontSize: '0.78rem', fontWeight: '500',
+                    }}>
+                      Go →
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      )
+    }
 
     const enrolled = dashboard?.enrolledCourses || []
     const totalLessons = enrolled.reduce((acc: number, c: any) => acc + (c.totalLessons || 0), 0)

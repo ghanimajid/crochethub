@@ -438,8 +438,11 @@ export default function ProfilePage() {
               My Courses
             </button>
           )}
-          {user?.role === 'Student' && (
-            <button style={tabStyle('savedPatterns')} onClick={() => setActiveTab('savedPatterns')}>
+          {(user?.role === 'Student' || user?.role === 'Instructor') && (
+            <button
+              style={tabStyle('savedPatterns')}
+              onClick={() => setActiveTab('savedPatterns')}
+            >
               Saved Patterns
             </button>
           )}

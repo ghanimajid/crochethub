@@ -64,6 +64,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     gender: data.gender || '',
                     experienceYears: data.experienceYears || 0,
                     overallRating: data.overallRating || 0,
+                    totalStudents: data.totalStudents || 0,
+                    totalCourses: data.totalCourses || 0,
                 }
 
                 setUser(fullUser)

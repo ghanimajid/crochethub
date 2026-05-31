@@ -53,7 +53,7 @@ export default function InstructorDashboard() {
     return (
         <div style={{ backgroundColor: 'var(--cream)', minHeight: '100vh' }}>
             <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '48px' }}>
-
+                
                 {/* Header */}
                 <div style={{
                     display: 'flex',
