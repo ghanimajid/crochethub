@@ -52,6 +52,8 @@ const adminReports = [
 ]
 
 export default function Navbar() {
+  const [courses, setCourses] = useState<any[]>([])
+  const [users, setUsers] = useState<any[]>([])
   const [showCourseInput, setShowCourseInput] = useState(false)
   const [showContribInput, setShowContribInput] = useState(false)
   const [courseIDInput, setCourseIDInput] = useState('')
@@ -61,6 +63,7 @@ export default function Navbar() {
   const [reportsOpen, setReportsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -95,11 +98,32 @@ export default function Navbar() {
   async function handleDownloadReport(endpoint: string) {
     if (endpoint === 'COURSE_CERT') {
       setReportsOpen(false)
+
+      fetch('https://localhost:7167/api/Student/enrollments', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+        .then(r => r.json())
+        .then(data => setCourses(Array.isArray(data) ? data : []))
+        .catch(() => { })
+
       setShowCourseInput(true)
       return
     }
+
     if (endpoint === 'TOP_CONTRIBUTOR') {
       setReportsOpen(false)
+
+      fetch('https://localhost:7167/api/Admin/users', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+        .then(r => r.json())
+        .then(data => setUsers(Array.isArray(data) ? data : []))
+        .catch(() => { })
+
       setShowContribInput(true)
       return
     }
@@ -394,7 +418,7 @@ export default function Navbar() {
         }} onClick={() => setShowCourseInput(false)}>
           <div style={{
             backgroundColor: 'white', borderRadius: '20px', padding: '32px',
-            width: '400px', boxShadow: '0 8px 40px rgba(0,0,0,0.12)',
+            width: '420px', boxShadow: '0 8px 40px rgba(0,0,0,0.12)',
           }} onClick={e => e.stopPropagation()}>
             <h3 style={{
               fontFamily: 'var(--font-cormorant)', fontSize: '1.5rem',
@@ -402,35 +426,75 @@ export default function Navbar() {
             }}>
               Course Certificate
             </h3>
-            <p style={{ fontFamily: 'var(--font-inter)', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '20px' }}>
-              Enter the Course ID to download your completion certificate
+            <p style={{
+              fontFamily: 'var(--font-inter)', fontSize: '0.85rem',
+              color: 'var(--text-muted)', marginBottom: '20px',
+            }}>
+              Select a completed course to download your certificate
             </p>
-            <input
-              type="number"
-              placeholder="Course ID (e.g. 10)"
-              value={courseIDInput}
-              onChange={e => setCourseIDInput(e.target.value)}
-              style={{
-                width: '100%', padding: '12px 14px', backgroundColor: 'var(--cream)',
-                border: '1.5px solid var(--border)', borderRadius: '10px',
-                fontFamily: 'var(--font-inter)', fontSize: '0.9rem',
-                outline: 'none', boxSizing: 'border-box', marginBottom: '16px',
-              }}
-            />
+
+            {courses.length === 0 ? (
+              <p style={{
+                fontFamily: 'var(--font-inter)', fontSize: '0.85rem',
+                color: 'var(--text-muted)', marginBottom: '16px',
+                padding: '12px', backgroundColor: 'var(--cream)',
+                borderRadius: '10px', textAlign: 'center',
+              }}>
+                Loading your courses...
+              </p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+                {courses.map((course: any) => (
+                  <button
+                    key={course.courseID}
+                    onClick={() => setCourseIDInput(String(course.courseID))}
+                    style={{
+                      padding: '12px 16px',
+                      backgroundColor: courseIDInput === String(course.courseID) ? '#7C2D3E' : 'var(--cream)',
+                      color: courseIDInput === String(course.courseID) ? 'white' : 'var(--text)',
+                      border: courseIDInput === String(course.courseID) ? 'none' : '1.5px solid var(--border)',
+                      borderRadius: '10px',
+                      fontFamily: 'var(--font-inter)',
+                      fontSize: '0.875rem',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <span>{course.courseTitle || course.title || course.courseName}</span>
+                    {courseIDInput === String(course.courseID) && (
+                      <span style={{ fontSize: '0.8rem', opacity: 0.8 }}>✓ Selected</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={downloadCourseCert} style={{
-                flex: 1, padding: '12px', backgroundColor: '#7C2D3E', color: 'white',
-                border: 'none', borderRadius: '10px', fontFamily: 'var(--font-inter)',
-                fontWeight: '600', fontSize: '0.9rem', cursor: 'pointer',
-              }}>
-                Download PDF
+              <button
+                onClick={downloadCourseCert}
+                disabled={!courseIDInput}
+                style={{
+                  flex: 1, padding: '12px',
+                  backgroundColor: courseIDInput ? '#7C2D3E' : '#9BA8A3',
+                  color: 'white', border: 'none', borderRadius: '10px',
+                  fontFamily: 'var(--font-inter)', fontWeight: '600',
+                  fontSize: '0.9rem', cursor: courseIDInput ? 'pointer' : 'not-allowed',
+                }}
+              >
+                Download Certificate
               </button>
-              <button onClick={() => setShowCourseInput(false)} style={{
-                padding: '12px 20px', backgroundColor: 'transparent',
-                border: '1.5px solid var(--border)', borderRadius: '10px',
-                fontFamily: 'var(--font-inter)', fontSize: '0.9rem', cursor: 'pointer',
-                color: 'var(--text-secondary)',
-              }}>
+              <button
+                onClick={() => { setShowCourseInput(false); setCourseIDInput('') }}
+                style={{
+                  padding: '12px 20px', backgroundColor: 'transparent',
+                  border: '1.5px solid var(--border)', borderRadius: '10px',
+                  fontFamily: 'var(--font-inter)', fontSize: '0.9rem',
+                  cursor: 'pointer', color: 'var(--text-secondary)',
+                }}
+              >
                 Cancel
               </button>
             </div>
@@ -447,7 +511,7 @@ export default function Navbar() {
         }} onClick={() => setShowContribInput(false)}>
           <div style={{
             backgroundColor: 'white', borderRadius: '20px', padding: '32px',
-            width: '400px', boxShadow: '0 8px 40px rgba(0,0,0,0.12)',
+            width: '420px', boxShadow: '0 8px 40px rgba(0,0,0,0.12)',
           }} onClick={e => e.stopPropagation()}>
             <h3 style={{
               fontFamily: 'var(--font-cormorant)', fontSize: '1.5rem',
@@ -455,35 +519,86 @@ export default function Navbar() {
             }}>
               Top Contributor Certificate
             </h3>
-            <p style={{ fontFamily: 'var(--font-inter)', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '20px' }}>
-              Enter the User ID to generate their top contributor certificate
+            <p style={{
+              fontFamily: 'var(--font-inter)', fontSize: '0.85rem',
+              color: 'var(--text-muted)', marginBottom: '20px',
+            }}>
+              Select a user to generate their top contributor certificate
             </p>
-            <input
-              type="number"
-              placeholder="User ID (e.g. 2)"
-              value={userIDInput}
-              onChange={e => setUserIDInput(e.target.value)}
-              style={{
-                width: '100%', padding: '12px 14px', backgroundColor: 'var(--cream)',
-                border: '1.5px solid var(--border)', borderRadius: '10px',
-                fontFamily: 'var(--font-inter)', fontSize: '0.9rem',
-                outline: 'none', boxSizing: 'border-box', marginBottom: '16px',
-              }}
-            />
+
+            {users.length === 0 ? (
+              <p style={{
+                fontFamily: 'var(--font-inter)', fontSize: '0.85rem',
+                color: 'var(--text-muted)', marginBottom: '16px',
+                padding: '12px', backgroundColor: 'var(--cream)',
+                borderRadius: '10px', textAlign: 'center',
+              }}>
+                Loading users...
+              </p>
+            ) : (
+              <div style={{
+                display: 'flex', flexDirection: 'column', gap: '8px',
+                marginBottom: '16px', maxHeight: '280px', overflowY: 'auto',
+              }}>
+                {users.map((u: any) => (
+                  <button
+                    key={u.userID}
+                    onClick={() => setUserIDInput(String(u.userID))}
+                    style={{
+                      padding: '12px 16px',
+                      backgroundColor: userIDInput === String(u.userID) ? '#7C2D3E' : 'var(--cream)',
+                      color: userIDInput === String(u.userID) ? 'white' : 'var(--text)',
+                      border: userIDInput === String(u.userID) ? 'none' : '1.5px solid var(--border)',
+                      borderRadius: '10px',
+                      fontFamily: 'var(--font-inter)',
+                      fontSize: '0.875rem',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <div>
+                      <span style={{ fontWeight: '500' }}>{u.firstName} {u.lastName}</span>
+                      <span style={{
+                        marginLeft: '8px', fontSize: '0.78rem',
+                        opacity: userIDInput === String(u.userID) ? 0.8 : 0.5,
+                      }}>
+                        {u.role}
+                      </span>
+                    </div>
+                    {userIDInput === String(u.userID) && (
+                      <span style={{ fontSize: '0.8rem', opacity: 0.8 }}>✓</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={downloadContribCert} style={{
-                flex: 1, padding: '12px', backgroundColor: '#7C2D3E', color: 'white',
-                border: 'none', borderRadius: '10px', fontFamily: 'var(--font-inter)',
-                fontWeight: '600', fontSize: '0.9rem', cursor: 'pointer',
-              }}>
-                Download PDF
+              <button
+                onClick={downloadContribCert}
+                disabled={!userIDInput}
+                style={{
+                  flex: 1, padding: '12px',
+                  backgroundColor: userIDInput ? '#7C2D3E' : '#9BA8A3',
+                  color: 'white', border: 'none', borderRadius: '10px',
+                  fontFamily: 'var(--font-inter)', fontWeight: '600',
+                  fontSize: '0.9rem', cursor: userIDInput ? 'pointer' : 'not-allowed',
+                }}
+              >
+                Download Certificate
               </button>
-              <button onClick={() => setShowContribInput(false)} style={{
-                padding: '12px 20px', backgroundColor: 'transparent',
-                border: '1.5px solid var(--border)', borderRadius: '10px',
-                fontFamily: 'var(--font-inter)', fontSize: '0.9rem', cursor: 'pointer',
-                color: 'var(--text-secondary)',
-              }}>
+              <button
+                onClick={() => { setShowContribInput(false); setUserIDInput('') }}
+                style={{
+                  padding: '12px 20px', backgroundColor: 'transparent',
+                  border: '1.5px solid var(--border)', borderRadius: '10px',
+                  fontFamily: 'var(--font-inter)', fontSize: '0.9rem',
+                  cursor: 'pointer', color: 'var(--text-secondary)',
+                }}
+              >
                 Cancel
               </button>
             </div>
