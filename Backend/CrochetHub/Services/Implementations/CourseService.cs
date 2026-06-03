@@ -93,6 +93,13 @@ namespace CrochetHub.Services.Implementations
 
             if (role != "Admin" && course.InstructorID != userID) return null;
 
+            if (dto.Title == null && dto.Description == null && dto.DifficultyID == null
+        && dto.ThumbnailURL == null && dto.TagIDs == null && dto.PrerequisiteIDs == null)
+                return null;
+
+            if (dto.Title != null && dto.Title.Trim().Length == 0) return null;
+            if (dto.Description != null && dto.Description.Trim().Length == 0) return null;
+
             // Validate tags
             if (dto.TagIDs != null && dto.TagIDs.Any())
             {
@@ -134,8 +141,8 @@ namespace CrochetHub.Services.Implementations
             var oldTitle = course.Title;
             var updated = await _courseRepo.UpdateAsync(courseID, dto.TagIDs, dto.PrerequisiteIDs, c =>
             {
-                if (dto.Title != null) c.Title = dto.Title;
-                if (dto.Description != null) c.Description = dto.Description;
+                if (dto.Title != null) c.Title = dto.Title.Trim();
+                if (dto.Description != null) c.Description = dto.Description.Trim();
                 if (dto.DifficultyID != null) c.DifficultyID = dto.DifficultyID;
                 if (dto.ThumbnailURL != null) c.ThumbnailURL = dto.ThumbnailURL;
             });
@@ -187,7 +194,7 @@ namespace CrochetHub.Services.Implementations
 
             // fetch all completed course IDs in one query
             var completedCourseIDs = await _context.CourseEnrollments
-                .Where(ce => ce.StudentID == studentID && ce.CompletionPercentage == 100)
+                .Where(ce => ce.StudentID == studentID && ce.CompletionPercentage >= 100)
                 .Select(ce => ce.CourseID)
                 .ToListAsync();
 

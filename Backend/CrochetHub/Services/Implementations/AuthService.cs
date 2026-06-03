@@ -139,6 +139,15 @@ namespace CrochetHub.Services.Implementations
 
             if (user == null) return false;
 
+            if (dto.FirstName == null && dto.LastName == null && dto.Bio == null && dto.ProfilePicture == null && dto.DateOfBirth == null && dto.GenderID == null)
+                return false;
+
+            if (dto.FirstName != null && dto.FirstName.Trim().Length == 0) return false;
+            if (dto.LastName != null && dto.LastName.Trim().Length == 0) return false;
+
+            if (dto.DateOfBirth.HasValue && dto.DateOfBirth.Value.Date >= DateTime.UtcNow.Date)
+                return false;
+
             if (dto.GenderID.HasValue)
             {
                 var gender = await _context.Lookups

@@ -68,6 +68,8 @@ namespace CrochetHub.Services.Implementations
                 instructorID, "INSERT", "Lesson", created.LessonID,
                 null, $"Lesson '{created.Title}' created in Course {dto.CourseID}");
 
+            await RecalculateAllEnrollmentsAsync(dto.CourseID);
+
             return (MapToDto(created, null), null);
         }
         public async Task<(LessonDto? Lesson, string? Error)> UpdateAsync(int lessonID, int userID, string role, UpdateLessonDto dto)
@@ -98,7 +100,6 @@ namespace CrochetHub.Services.Implementations
             if (dto.Title == null && dto.VideoURL == null && dto.Content == null && dto.SequenceOrder == null)
                 return (null, "No fields provided to update.");
 
-            // Validate sequence order not taken by another lesson
             if (dto.SequenceOrder.HasValue)
             {
                 if (await _lessonRepo.SequenceOrderExistsAsync(lesson.CourseID, dto.SequenceOrder.Value, lessonID))
@@ -130,7 +131,6 @@ namespace CrochetHub.Services.Implementations
             if (lesson == null)
                 return (false, "Lesson not found.");
 
-            // Only course instructor or admin can delete
             if (role != "Admin")
             {
                 var course = await _context.Courses.FindAsync(lesson.CourseID);
@@ -147,45 +147,107 @@ namespace CrochetHub.Services.Implementations
             var title = lesson.Title;
             var courseID = lesson.CourseID;
 
-            await _auditService.LogAsync(
-                userID, "DELETE", "Lesson", lessonID,
-                $"Lesson '{title}' deleted from Course {courseID}",
-                null);
 
             var deleted = await _lessonRepo.DeleteAsync(lessonID);
             if (!deleted)
                 return (false, "Failed to delete lesson.");
 
+            await _auditService.LogAsync(
+                userID, "DELETE", "Lesson", lessonID,
+                $"Lesson '{title}' deleted from Course {courseID}",
+                null);
+
+            await RecalculateAllEnrollmentsAsync(courseID);
+
             return (true, $"Lesson '{title}' deleted successfully.");
         }
         public async Task<(bool Success, string Message)> MarkCompleteAsync(int lessonID, int studentID, int timeSpent)
         {
-            // Validate lesson exists
+            if (timeSpent < 0)
+                return (false, "Time spent cannot be negative.");
+
             var lesson = await _lessonRepo.GetByIDAsync(lessonID);
             if (lesson == null)
                 return (false, "Lesson not found.");
 
-            // Validate student is enrolled in the course
+            var student = await _context.Students.FindAsync(studentID);
+            if (student == null)
+                return (false, "Student not found.");
+
             var isEnrolled = await _context.CourseEnrollments
                 .AnyAsync(ce => ce.StudentID == studentID && ce.CourseID == lesson.CourseID);
             if (!isEnrolled)
                 return (false, "You are not enrolled in the course this lesson belongs to.");
 
-            // Validate student exists
-            var student = await _context.Students.FindAsync(studentID);
-            if (student == null)
-                return (false, "Student not found.");
-
-            // Check if already completed
             var existing = await _lessonRepo.GetProgressAsync(studentID, lessonID);
             if (existing != null && existing.Completed)
                 return (false, "You have already completed this lesson.");
 
             await _lessonRepo.UpsertProgressAsync(studentID, lessonID, true, timeSpent);
-
+            await RecalculateEnrollmentAsync(studentID, lesson.CourseID);
             return (true, "Lesson marked as complete.");
         }
+        private async Task RecalculateAllEnrollmentsAsync(int courseID)
+        {
+            var lessonIDsInCourse = await _context.Lessons
+                .Where(l => l.CourseID == courseID)
+                .Select(l => l.LessonID)
+                .ToListAsync();
 
+            var totalLessons = lessonIDsInCourse.Count;
+
+            var enrollments = await _context.CourseEnrollments
+                .Where(ce => ce.CourseID == courseID)
+                .ToListAsync();
+
+            if (!enrollments.Any()) return;
+
+            foreach (var enrollment in enrollments)
+            {
+                if (totalLessons == 0)
+                {
+                    enrollment.CompletionPercentage = 0;
+                    continue;
+                }
+
+                var completedCount = await _context.StudentProgresses
+                    .CountAsync(sp =>
+                        sp.StudentID == enrollment.StudentID &&
+                        lessonIDsInCourse.Contains(sp.LessonID) &&
+                        sp.Completed);
+
+                enrollment.CompletionPercentage = Math.Round((decimal)completedCount / totalLessons * 100, 2);
+            }
+
+            await _context.SaveChangesAsync();
+        }
+        private async Task RecalculateEnrollmentAsync(int studentID, int courseID)
+        {
+            var lessonIDsInCourse = await _context.Lessons
+                .Where(l => l.CourseID == courseID)
+                .Select(l => l.LessonID)
+                .ToListAsync();
+
+            var totalLessons = lessonIDsInCourse.Count;
+            if (totalLessons == 0) return;
+
+            var completedCount = await _context.StudentProgresses
+                .CountAsync(sp =>
+                    sp.StudentID == studentID &&
+                    lessonIDsInCourse.Contains(sp.LessonID) &&
+                    sp.Completed);
+
+            var percentage = Math.Round((decimal)completedCount / totalLessons * 100, 2);
+
+            var enrollment = await _context.CourseEnrollments
+                .FirstOrDefaultAsync(ce => ce.StudentID == studentID && ce.CourseID == courseID);
+
+            if (enrollment != null)
+            {
+                enrollment.CompletionPercentage = percentage;
+                await _context.SaveChangesAsync();
+            }
+        }
         private LessonDto MapToDto(Models.Lesson lesson, int? studentID)
         {
             var dto = new LessonDto

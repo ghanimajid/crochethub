@@ -11,6 +11,14 @@ namespace CrochetHub.Services.Implementations
 {
     public class ReportService : IReportService
     {
+        private static readonly Color PrimaryColor = Color.FromHex("#8B6F47");
+        private static readonly Color HeaderColor = Color.FromHex("#D8C3A5");
+        private static readonly Color CardColor = Color.FromHex("#F8F3EA");
+        private static readonly Color AlternateRowColor = Color.FromHex("#F5EFE6");
+        private static readonly Color BorderColor = Color.FromHex("#CBB89D");
+        private static readonly Color AccentColor = Color.FromHex("#A67C52");
+        private static readonly Color TextColor = Color.FromHex("#4A3728");
+
         private readonly AppDbContext _context;
 
         public ReportService(AppDbContext context)
@@ -55,16 +63,16 @@ namespace CrochetHub.Services.Implementations
 
             return BuildDocument("Platform Overview Report", col =>
             {
-                col.Item().PaddingBottom(10).Text("Platform Summary").SemiBold().FontSize(13);
+                col.Item().PaddingBottom(10).Text("Executive Summary").SemiBold().FontSize(13);
                 col.Item().Table(table =>
                 {
                     table.ColumnsDefinition(c => { for (int i = 0; i < 4; i++) c.RelativeColumn(); });
                     void Card(string label, string value)
                     {
-                        table.Cell().Border(1).BorderColor(Colors.Purple.Lighten3)
-                            .Background(Colors.Purple.Lighten5).Padding(8).Column(cc =>
+                        table.Cell().Border(1).BorderColor(BorderColor)
+                            .Background(CardColor).Padding(8).Column(cc =>
                             {
-                                cc.Item().Text(value).Bold().FontSize(22).FontColor(Colors.Purple.Medium);
+                                cc.Item().Text(value).Bold().FontSize(22).FontColor(PrimaryColor);
                                 cc.Item().Text(label).FontSize(9).FontColor(Colors.Grey.Darken1);
                             });
                     }
@@ -91,17 +99,17 @@ namespace CrochetHub.Services.Implementations
                     table.Header(h =>
                     {
                         foreach (var label in new[] { "Course Title", "Enrolled", "Avg Rating" })
-                            h.Cell().Background(Colors.Purple.Lighten3).Padding(5)
+                            h.Cell().Background(HeaderColor).Padding(5)
                                 .Text(label).SemiBold().FontSize(10);
                     });
                     bool alt = false;
                     foreach (var c in topCourses)
                     {
-                        var bg = alt ? Colors.Grey.Lighten4 : Colors.White;
+                        var bg = alt ? AlternateRowColor : Colors.White;
                         table.Cell().Background(bg).Padding(5).Text(c.Title);
                         table.Cell().Background(bg).Padding(5).Text(c.EnrolledCount.ToString());
                         table.Cell().Background(bg).Padding(5)
-                            .Text(c.AvgRating > 0 ? $"{c.AvgRating:F1}" : "—");
+                            .Text(c.AvgRating > 0 ? $"{c.AvgRating:F1}" : "N/A");
                         alt = !alt;
                     }
                 });
@@ -126,7 +134,7 @@ namespace CrochetHub.Services.Implementations
             return BuildDocument("User Growth Report", col =>
             {
                 col.Item().PaddingBottom(8)
-                    .Text($"Total Records: {growth.Count}").FontSize(10).FontColor(Colors.Grey.Darken1);
+                    .Text($"Reporting Period Entries: {growth.Count}").FontSize(10).FontColor(Colors.Grey.Darken1);
                 col.Item().Table(table =>
                 {
                     table.ColumnsDefinition(c =>
@@ -135,14 +143,14 @@ namespace CrochetHub.Services.Implementations
                     });
                     table.Header(h =>
                     {
-                        foreach (var label in new[] { "Year", "Month", "Role", "New Users" })
-                            h.Cell().Background(Colors.Purple.Lighten3).Padding(5)
+                        foreach (var label in new[] { "Year", "Month", "Role", "Registered Users" })
+                            h.Cell().Background(HeaderColor).Padding(5)
                                 .Text(label).SemiBold().FontSize(10);
                     });
                     bool alt = false;
                     foreach (var item in growth)
                     {
-                        var bg = alt ? Colors.Grey.Lighten4 : Colors.White;
+                        var bg = alt ? AlternateRowColor : Colors.White;
                         table.Cell().Background(bg).Padding(5).Text(item.Year.ToString());
                         table.Cell().Background(bg).Padding(5)
                             .Text(System.Globalization.CultureInfo.CurrentCulture
@@ -193,7 +201,7 @@ namespace CrochetHub.Services.Implementations
 
             return BuildDocument("Forum Activity Report", col =>
             {
-                col.Item().PaddingBottom(6).Text("Top 20 Threads by Replies").SemiBold().FontSize(12);
+                col.Item().PaddingBottom(6).Text("Most Active Discussion Threads").SemiBold().FontSize(12);
                 col.Item().Table(table =>
                 {
                     table.ColumnsDefinition(c =>
@@ -204,13 +212,13 @@ namespace CrochetHub.Services.Implementations
                     table.Header(h =>
                     {
                         foreach (var label in new[] { "Thread Title", "Author", "Category", "Replies", "Upvotes" })
-                            h.Cell().Background(Colors.Purple.Lighten3).Padding(5)
+                            h.Cell().Background(HeaderColor).Padding(5)
                                 .Text(label).SemiBold().FontSize(9);
                     });
                     bool alt = false;
                     foreach (var t in threadDtos)
                     {
-                        var bg = alt ? Colors.Grey.Lighten4 : Colors.White;
+                        var bg = alt ? AlternateRowColor : Colors.White;
                         table.Cell().Background(bg).Padding(5).Text(t.ThreadTitle).FontSize(9);
                         table.Cell().Background(bg).Padding(5).Text(t.AuthorName).FontSize(9);
                         table.Cell().Background(bg).Padding(5).Text(t.Category).FontSize(9);
@@ -220,7 +228,7 @@ namespace CrochetHub.Services.Implementations
                     }
                 });
 
-                col.Item().PaddingTop(18).PaddingBottom(6).Text("Top 10 Contributors").SemiBold().FontSize(12);
+                col.Item().PaddingTop(18).PaddingBottom(6).Text("Leading Community Contributors").SemiBold().FontSize(12);
                 col.Item().Table(table =>
                 {
                     table.ColumnsDefinition(c =>
@@ -230,13 +238,13 @@ namespace CrochetHub.Services.Implementations
                     table.Header(h =>
                     {
                         foreach (var label in new[] { "User", "Threads", "Replies", "Upvotes" })
-                            h.Cell().Background(Colors.Purple.Lighten3).Padding(5)
+                            h.Cell().Background(HeaderColor).Padding(5)
                                 .Text(label).SemiBold().FontSize(10);
                     });
                     bool alt = false;
                     foreach (var u in topContributors)
                     {
-                        var bg = alt ? Colors.Grey.Lighten4 : Colors.White;
+                        var bg = alt ? AlternateRowColor : Colors.White;
                         table.Cell().Background(bg).Padding(5).Text(u.UserName);
                         table.Cell().Background(bg).Padding(5).Text(u.ThreadsCount.ToString());
                         table.Cell().Background(bg).Padding(5).Text(u.RepliesCount.ToString());
@@ -295,7 +303,7 @@ namespace CrochetHub.Services.Implementations
             return BuildDocument("Content Audit Report", col =>
             {
                 col.Item().PaddingBottom(6)
-                    .Text($"Courses ({courseDtos.Count} total)").SemiBold().FontSize(12);
+                    .Text($"Course Content Review ({courseDtos.Count} Records)").SemiBold().FontSize(12);
                 col.Item().Table(table =>
                 {
                     table.ColumnsDefinition(c =>
@@ -306,26 +314,26 @@ namespace CrochetHub.Services.Implementations
                     table.Header(h =>
                     {
                         foreach (var label in new[] { "Title", "Instructor", "Difficulty", "Enrolled", "Avg Rating", "Reviews" })
-                            h.Cell().Background(Colors.Purple.Lighten3).Padding(5)
+                            h.Cell().Background(HeaderColor).Padding(5)
                                 .Text(label).SemiBold().FontSize(9);
                     });
                     bool alt = false;
                     foreach (var c in courseDtos)
                     {
-                        var bg = alt ? Colors.Grey.Lighten4 : Colors.White;
+                        var bg = alt ? AlternateRowColor : Colors.White;
                         table.Cell().Background(bg).Padding(5).Text(c.Title).FontSize(9);
                         table.Cell().Background(bg).Padding(5).Text(c.InstructorName).FontSize(9);
-                        table.Cell().Background(bg).Padding(5).Text(c.Difficulty ?? "—").FontSize(9);
+                        table.Cell().Background(bg).Padding(5).Text(c.Difficulty ?? "N/A").FontSize(9);
                         table.Cell().Background(bg).Padding(5).Text(c.EnrolledCount.ToString()).FontSize(9);
                         table.Cell().Background(bg).Padding(5)
-                            .Text(c.AvgRating > 0 ? $"{c.AvgRating:F1}" : "—").FontSize(9);
+                            .Text(c.AvgRating > 0 ? $"{c.AvgRating:F1}" : "N/A").FontSize(9);
                         table.Cell().Background(bg).Padding(5).Text(c.ReviewCount.ToString()).FontSize(9);
                         alt = !alt;
                     }
                 });
 
                 col.Item().PaddingTop(18).PaddingBottom(6)
-                    .Text($"Patterns ({patternDtos.Count} total)").SemiBold().FontSize(12);
+                    .Text($"Pattern Content Review ({patternDtos.Count} Records)").SemiBold().FontSize(12);
                 col.Item().Table(table =>
                 {
                     table.ColumnsDefinition(c =>
@@ -336,19 +344,19 @@ namespace CrochetHub.Services.Implementations
                     table.Header(h =>
                     {
                         foreach (var label in new[] { "Title", "Creator", "Difficulty", "Favorites", "Avg Rating", "Reviews" })
-                            h.Cell().Background(Colors.Purple.Lighten3).Padding(5)
+                            h.Cell().Background(HeaderColor).Padding(5)
                                 .Text(label).SemiBold().FontSize(9);
                     });
                     bool alt = false;
                     foreach (var p in patternDtos)
                     {
-                        var bg = alt ? Colors.Grey.Lighten4 : Colors.White;
+                        var bg = alt ? AlternateRowColor : Colors.White;
                         table.Cell().Background(bg).Padding(5).Text(p.Title).FontSize(9);
                         table.Cell().Background(bg).Padding(5).Text(p.CreatorName).FontSize(9);
-                        table.Cell().Background(bg).Padding(5).Text(p.Difficulty ?? "—").FontSize(9);
+                        table.Cell().Background(bg).Padding(5).Text(p.Difficulty ?? "N/A").FontSize(9);
                         table.Cell().Background(bg).Padding(5).Text(p.FavoriteCount.ToString()).FontSize(9);
                         table.Cell().Background(bg).Padding(5)
-                            .Text(p.AvgRating > 0 ? $"{p.AvgRating:F1}" : "—").FontSize(9);
+                            .Text(p.AvgRating > 0 ? $"{p.AvgRating:F1}" : "N/A").FontSize(9);
                         table.Cell().Background(bg).Padding(5).Text(p.ReviewCount.ToString()).FontSize(9);
                         alt = !alt;
                     }
@@ -384,7 +392,7 @@ namespace CrochetHub.Services.Implementations
             var instructorName = instructor?.Person != null
                 ? $"{instructor.Person.FirstName} {instructor.Person.LastName}" : "Instructor";
 
-            return BuildDocument($"Course Performance Report — {instructorName}", col =>
+            return BuildDocument($"Course Performance Report | {instructorName}", col =>
             {
                 col.Item().PaddingBottom(8)
                     .Text($"Total Courses: {courseDtos.Count}").FontSize(10).FontColor(Colors.Grey.Darken1);
@@ -398,19 +406,19 @@ namespace CrochetHub.Services.Implementations
                     table.Header(h =>
                     {
                         foreach (var label in new[] { "Course Title", "Difficulty", "Enrolled", "Avg Completion %", "Avg Rating", "Reviews" })
-                            h.Cell().Background(Colors.Purple.Lighten3).Padding(5)
+                            h.Cell().Background(HeaderColor).Padding(5)
                                 .Text(label).SemiBold().FontSize(9);
                     });
                     bool alt = false;
                     foreach (var c in courseDtos)
                     {
-                        var bg = alt ? Colors.Grey.Lighten4 : Colors.White;
+                        var bg = alt ? AlternateRowColor : Colors.White;
                         table.Cell().Background(bg).Padding(5).Text(c.CourseTitle).FontSize(9);
-                        table.Cell().Background(bg).Padding(5).Text(c.Difficulty ?? "—").FontSize(9);
+                        table.Cell().Background(bg).Padding(5).Text(c.Difficulty ?? "N/A").FontSize(9);
                         table.Cell().Background(bg).Padding(5).Text(c.EnrolledCount.ToString()).FontSize(9);
                         table.Cell().Background(bg).Padding(5).Text($"{c.AvgCompletion}%").FontSize(9);
                         table.Cell().Background(bg).Padding(5)
-                            .Text(c.AvgRating > 0 ? $"{c.AvgRating:F1}" : "—").FontSize(9);
+                            .Text(c.AvgRating > 0 ? $"{c.AvgRating:F1}" : "N/A").FontSize(9);
                         table.Cell().Background(bg).Padding(5).Text(c.ReviewCount.ToString()).FontSize(9);
                         alt = !alt;
                     }
@@ -442,7 +450,7 @@ namespace CrochetHub.Services.Implementations
             var instructorName = instructor?.Person != null
                 ? $"{instructor.Person.FirstName} {instructor.Person.LastName}" : "Instructor";
 
-            return BuildDocument($"Student Progress Report — {instructorName}", col =>
+            return BuildDocument($"Student Progress Report | {instructorName}", col =>
             {
                 col.Item().PaddingBottom(8)
                     .Text($"Total Enrollments: {dtos.Count}").FontSize(10).FontColor(Colors.Grey.Darken1);
@@ -455,13 +463,13 @@ namespace CrochetHub.Services.Implementations
                     table.Header(h =>
                     {
                         foreach (var label in new[] { "Student", "Course", "Completion %", "Enrolled On" })
-                            h.Cell().Background(Colors.Purple.Lighten3).Padding(5)
+                            h.Cell().Background(HeaderColor).Padding(5)
                                 .Text(label).SemiBold().FontSize(10);
                     });
                     bool alt = false;
                     foreach (var item in dtos)
                     {
-                        var bg = alt ? Colors.Grey.Lighten4 : Colors.White;
+                        var bg = alt ? AlternateRowColor : Colors.White;
                         table.Cell().Background(bg).Padding(5).Text(item.StudentName).FontSize(9);
                         table.Cell().Background(bg).Padding(5).Text(item.CourseTitle).FontSize(9);
                         table.Cell().Background(bg).Padding(5)
@@ -510,7 +518,7 @@ namespace CrochetHub.Services.Implementations
             var instructorName = instructor?.Person != null
                 ? $"{instructor.Person.FirstName} {instructor.Person.LastName}" : "Instructor";
 
-            return BuildDocument($"Lesson Engagement Report — {instructorName}", col =>
+            return BuildDocument($"Lesson Engagement Report for {instructorName}", col =>
             {
                 col.Item().PaddingBottom(8)
                     .Text($"Total Lessons: {dtos.Count}").FontSize(10).FontColor(Colors.Grey.Darken1);
@@ -524,13 +532,13 @@ namespace CrochetHub.Services.Implementations
                     table.Header(h =>
                     {
                         foreach (var label in new[] { "Course", "Lesson", "Order", "Completed", "Enrolled", "Avg Time (sec)" })
-                            h.Cell().Background(Colors.Purple.Lighten3).Padding(5)
+                            h.Cell().Background(HeaderColor).Padding(5)
                                 .Text(label).SemiBold().FontSize(9);
                     });
                     bool alt = false;
                     foreach (var item in dtos)
                     {
-                        var bg = alt ? Colors.Grey.Lighten4 : Colors.White;
+                        var bg = alt ? AlternateRowColor : Colors.White;
                         table.Cell().Background(bg).Padding(5).Text(item.CourseTitle).FontSize(9);
                         table.Cell().Background(bg).Padding(5).Text(item.LessonTitle).FontSize(9);
                         table.Cell().Background(bg).Padding(5).Text(item.LessonOrder.ToString()).FontSize(9);
@@ -538,7 +546,7 @@ namespace CrochetHub.Services.Implementations
                             .Text($"{item.CompletedCount}/{item.TotalEnrolled}").FontSize(9);
                         table.Cell().Background(bg).Padding(5).Text(item.TotalEnrolled.ToString()).FontSize(9);
                         table.Cell().Background(bg).Padding(5)
-                            .Text(item.AvgTimeMinutes > 0 ? $"{item.AvgTimeMinutes}" : "—").FontSize(9);
+                            .Text(item.AvgTimeMinutes > 0 ? $"{item.AvgTimeMinutes}" : "N/A").FontSize(9);
                         alt = !alt;
                     }
                 });
@@ -587,7 +595,7 @@ namespace CrochetHub.Services.Implementations
             var instructorName = instructor?.Person != null
                 ? $"{instructor.Person.FirstName} {instructor.Person.LastName}" : "Instructor";
 
-            return BuildDocument($"Popularity Report — {instructorName}", col =>
+            return BuildDocument($"Content Popularity Report for {instructorName}", col =>
             {
                 col.Item().PaddingBottom(6).Text("Courses by Enrollment").SemiBold().FontSize(12);
                 col.Item().Table(table =>
@@ -599,17 +607,17 @@ namespace CrochetHub.Services.Implementations
                     table.Header(h =>
                     {
                         foreach (var label in new[] { "Course Title", "Enrolled", "Avg Rating", "Avg Completion %" })
-                            h.Cell().Background(Colors.Purple.Lighten3).Padding(5)
+                            h.Cell().Background(HeaderColor).Padding(5)
                                 .Text(label).SemiBold().FontSize(10);
                     });
                     bool alt = false;
                     foreach (var c in courseDtos)
                     {
-                        var bg = alt ? Colors.Grey.Lighten4 : Colors.White;
+                        var bg = alt ? AlternateRowColor : Colors.White;
                         table.Cell().Background(bg).Padding(5).Text(c.Title);
                         table.Cell().Background(bg).Padding(5).Text(c.EnrolledCount.ToString());
                         table.Cell().Background(bg).Padding(5)
-                            .Text(c.AvgRating > 0 ? $"{c.AvgRating:F1}" : "—");
+                            .Text(c.AvgRating > 0 ? $"{c.AvgRating:F1}" : "N/A");
                         table.Cell().Background(bg).Padding(5).Text($"{c.AvgCompletion}%");
                         alt = !alt;
                     }
@@ -625,17 +633,17 @@ namespace CrochetHub.Services.Implementations
                     table.Header(h =>
                     {
                         foreach (var label in new[] { "Pattern Title", "Favorites", "Avg Rating", "Reviews" })
-                            h.Cell().Background(Colors.Purple.Lighten3).Padding(5)
+                            h.Cell().Background(HeaderColor).Padding(5)
                                 .Text(label).SemiBold().FontSize(10);
                     });
                     bool alt = false;
                     foreach (var p in patternDtos)
                     {
-                        var bg = alt ? Colors.Grey.Lighten4 : Colors.White;
+                        var bg = alt ? AlternateRowColor : Colors.White;
                         table.Cell().Background(bg).Padding(5).Text(p.Title);
                         table.Cell().Background(bg).Padding(5).Text(p.FavoriteCount.ToString());
                         table.Cell().Background(bg).Padding(5)
-                            .Text(p.AvgRating > 0 ? $"{p.AvgRating:F1}" : "—");
+                            .Text(p.AvgRating > 0 ? $"{p.AvgRating:F1}" : "N/A");
                         table.Cell().Background(bg).Padding(5).Text(p.ReviewCount.ToString());
                         alt = !alt;
                     }
@@ -669,7 +677,7 @@ namespace CrochetHub.Services.Implementations
             var studentName = student?.Person != null
                 ? $"{student.Person.FirstName} {student.Person.LastName}" : "Student";
 
-            return BuildDocument($"My Learning Report — {studentName}", col =>
+            return BuildDocument($"My Learning Report | {studentName}", col =>
             {
                 col.Item().PaddingBottom(8)
                     .Text($"Total Courses Enrolled: {dtos.Count}").FontSize(10).FontColor(Colors.Grey.Darken1);
@@ -683,16 +691,16 @@ namespace CrochetHub.Services.Implementations
                     table.Header(h =>
                     {
                         foreach (var label in new[] { "Course Title", "Instructor", "Difficulty", "Completion %", "Enrolled On" })
-                            h.Cell().Background(Colors.Purple.Lighten3).Padding(5)
+                            h.Cell().Background(HeaderColor).Padding(5)
                                 .Text(label).SemiBold().FontSize(9);
                     });
                     bool alt = false;
                     foreach (var e in dtos)
                     {
-                        var bg = alt ? Colors.Grey.Lighten4 : Colors.White;
+                        var bg = alt ? AlternateRowColor : Colors.White;
                         table.Cell().Background(bg).Padding(5).Text(e.CourseTitle).FontSize(9);
                         table.Cell().Background(bg).Padding(5).Text(e.InstructorName).FontSize(9);
-                        table.Cell().Background(bg).Padding(5).Text(e.Difficulty ?? "—").FontSize(9);
+                        table.Cell().Background(bg).Padding(5).Text(e.Difficulty ?? "N/A").FontSize(9);
                         table.Cell().Background(bg).Padding(5)
                             .Text($"{e.CompletionPercentage}%").FontSize(9);
                         table.Cell().Background(bg).Padding(5)
@@ -737,7 +745,7 @@ namespace CrochetHub.Services.Implementations
             var studentName = student?.Person != null
                 ? $"{student.Person.FirstName} {student.Person.LastName}" : "Student";
 
-            return BuildDocument($"My Progress Report — {studentName}", col =>
+            return BuildDocument($"My Progress Report | {studentName}", col =>
             {
                 var completedCount = dtos.Count(d => d.Completed);
                 col.Item().PaddingBottom(8)
@@ -754,13 +762,13 @@ namespace CrochetHub.Services.Implementations
                     table.Header(h =>
                     {
                         foreach (var label in new[] { "Course", "Lesson", "Order", "Status", "Completed On", "Time (min)" })
-                            h.Cell().Background(Colors.Purple.Lighten3).Padding(5)
+                            h.Cell().Background(HeaderColor).Padding(5)
                                 .Text(label).SemiBold().FontSize(9);
                     });
                     bool alt = false;
                     foreach (var item in dtos)
                     {
-                        var bg = alt ? Colors.Grey.Lighten4 : Colors.White;
+                        var bg = alt ? AlternateRowColor : Colors.White;
                         table.Cell().Background(bg).Padding(5).Text(item.CourseTitle).FontSize(9);
                         table.Cell().Background(bg).Padding(5).Text(item.LessonTitle).FontSize(9);
                         table.Cell().Background(bg).Padding(5).Text(item.LessonOrder.ToString()).FontSize(9);
@@ -769,9 +777,9 @@ namespace CrochetHub.Services.Implementations
                             .FontColor(item.Completed ? Colors.Green.Darken1 : Colors.Orange.Medium);
                         table.Cell().Background(bg).Padding(5)
                             .Text(item.CompletedAt.HasValue
-                                ? item.CompletedAt.Value.ToString("dd MMM yyyy") : "—").FontSize(9);
+                                ? item.CompletedAt.Value.ToString("dd MMM yyyy") : "N/A").FontSize(9);
                         table.Cell().Background(bg).Padding(5)
-                            .Text(item.TimeSpent.HasValue ? item.TimeSpent.Value.ToString() : "—").FontSize(9);
+                            .Text(item.TimeSpent.HasValue ? item.TimeSpent.Value.ToString() : "N/A").FontSize(9);
                         alt = !alt;
                     }
                 });
@@ -807,7 +815,7 @@ namespace CrochetHub.Services.Implementations
             var userName = user?.Person != null
                 ? $"{user.Person.FirstName} {user.Person.LastName}" : "User";
 
-            return BuildDocument($"My Patterns Report — {userName}", col =>
+            return BuildDocument($"My Patterns Report | {userName}", col =>
             {
                 col.Item().PaddingBottom(8)
                     .Text($"Total Patterns Created: {dtos.Count}").FontSize(10).FontColor(Colors.Grey.Darken1);
@@ -821,17 +829,17 @@ namespace CrochetHub.Services.Implementations
                     table.Header(h =>
                     {
                         foreach (var label in new[] { "Pattern Title", "Difficulty", "Avg Rating", "Reviews", "Favorites", "Created On" })
-                            h.Cell().Background(Colors.Purple.Lighten3).Padding(5)
+                            h.Cell().Background(HeaderColor).Padding(5)
                                 .Text(label).SemiBold().FontSize(9);
                     });
                     bool alt = false;
                     foreach (var p in dtos)
                     {
-                        var bg = alt ? Colors.Grey.Lighten4 : Colors.White;
+                        var bg = alt ? AlternateRowColor : Colors.White;
                         table.Cell().Background(bg).Padding(5).Text(p.Title).FontSize(9);
-                        table.Cell().Background(bg).Padding(5).Text(p.Difficulty ?? "—").FontSize(9);
+                        table.Cell().Background(bg).Padding(5).Text(p.Difficulty ?? "N/A").FontSize(9);
                         table.Cell().Background(bg).Padding(5)
-                            .Text(p.AvgRating > 0 ? $"{p.AvgRating:F1}" : "—").FontSize(9);
+                            .Text(p.AvgRating > 0 ? $"{p.AvgRating:F1}" : "N/A").FontSize(9);
                         table.Cell().Background(bg).Padding(5).Text(p.ReviewCount.ToString()).FontSize(9);
                         table.Cell().Background(bg).Padding(5).Text(p.FavoriteCount.ToString()).FontSize(9);
                         table.Cell().Background(bg).Padding(5)
@@ -866,7 +874,7 @@ namespace CrochetHub.Services.Implementations
             var userName = user?.Person != null
                 ? $"{user.Person.FirstName} {user.Person.LastName}" : "User";
 
-            return BuildDocument($"Activity Summary — {userName}", col =>
+            return BuildDocument($"Activity Summary | {userName}", col =>
             {
                 col.Item().PaddingBottom(10).Text("Activity Overview").SemiBold().FontSize(13);
                 col.Item().Table(table =>
@@ -877,7 +885,7 @@ namespace CrochetHub.Services.Implementations
                         table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(7)
                             .Text(label).FontSize(10);
                         table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten3).Padding(7)
-                            .Text(value).SemiBold().FontSize(10).FontColor(Colors.Purple.Medium);
+                            .Text(value).SemiBold().FontSize(10).FontColor(PrimaryColor);
                     }
                     Row("Courses Enrolled", summary.CoursesEnrolled.ToString());
                     Row("Patterns Created", summary.PatternsCreated.ToString());
@@ -901,13 +909,13 @@ namespace CrochetHub.Services.Implementations
                         table.Header(h =>
                         {
                             foreach (var label in new[] { "Thread Title", "Replies", "Posted On" })
-                                h.Cell().Background(Colors.Purple.Lighten3).Padding(5)
+                                h.Cell().Background(HeaderColor).Padding(5)
                                     .Text(label).SemiBold().FontSize(10);
                         });
                         bool alt = false;
                         foreach (var t in recentThreads)
                         {
-                            var bg = alt ? Colors.Grey.Lighten4 : Colors.White;
+                            var bg = alt ? AlternateRowColor : Colors.White;
                             table.Cell().Background(bg).Padding(5).Text(t.Title).FontSize(9);
                             table.Cell().Background(bg).Padding(5).Text(t.Replies.Count.ToString()).FontSize(9);
                             table.Cell().Background(bg).Padding(5)
@@ -947,10 +955,10 @@ namespace CrochetHub.Services.Implementations
                 .FirstOrDefaultAsync();
 
             var pdf = BuildCertificate(
-                title: "Certificate of Completion",
-                recipientLabel: "This certifies that",
+                title: "Certificate of Course Completion",
+                recipientLabel: "This certificate is proudly presented to",
                 recipientName: studentName,
-                bodyText: "has successfully completed the course",
+                bodyText: "In recognition of successfully completing",
                 subjectName: enrollment.Course.Title,
                 date: completedDate ?? DateTime.UtcNow
             );
@@ -986,17 +994,17 @@ namespace CrochetHub.Services.Implementations
 
             var milestone = totalStudents switch
             {
-                >= 100 => "Outstanding Educator — 100+ Students Reached",
-                >= 50 => "Expert Instructor — 50+ Students Reached",
-                >= 10 => "Rising Instructor — 10+ Students Reached",
-                _ => "Dedicated Instructor — First Students Reached"
+                >= 100 => "Outstanding Educator | 100+ Students Reached",
+                >= 50 => "Expert Instructor | 50+ Students Reached",
+                >= 10 => "Rising Instructor | 10+ Students Reached",
+                _ => "Dedicated Instructor | First Students Reached"
             };
 
             var pdf = BuildCertificate(
-                title: "Instructor Achievement Award",
-                recipientLabel: "Awarded to",
+                title: "Instructor Excellence Award",
+                recipientLabel: "This Awarded is presented to",
                 recipientName: instructorName,
-                bodyText: $"in recognition of teaching {totalCourses} course(s) and reaching {totalStudents} student(s)",
+                bodyText: $"For exceptional educational contributions through teaching {totalCourses} course(s) and positively impacting {totalStudents} student(s)",
                 subjectName: milestone,
                 date: DateTime.UtcNow
             );
@@ -1024,10 +1032,10 @@ namespace CrochetHub.Services.Implementations
                 ? $"{user.Person.FirstName} {user.Person.LastName}" : "Community Member";
 
             var pdf = BuildCertificate(
-                title: "Top Community Contributor",
-                recipientLabel: "Awarded to",
+                title: "Community Contribution Award",
+                recipientLabel: "This award is presented to",
                 recipientName: userName,
-                bodyText: $"for outstanding forum participation — {threadCount} thread(s), {replyCount} reply/replies, {totalUpvotes} upvote(s)",
+                bodyText: $"For outstanding participation and meaningful contributions to the CrochetHub community through discussions, collaboration, and knowledge sharing",
                 subjectName: "CrochetHub Community Champion",
                 date: DateTime.UtcNow
             );
@@ -1054,7 +1062,7 @@ namespace CrochetHub.Services.Implementations
                             row.RelativeItem().Column(c =>
                             {
                                 c.Item().Text("CrochetHub")
-                                    .SemiBold().FontSize(20).FontColor(Colors.Purple.Medium);
+                                    .SemiBold().FontSize(20).FontColor(PrimaryColor);
                                 c.Item().Text(title)
                                     .FontSize(12).FontColor(Colors.Grey.Darken2);
                             });
@@ -1066,7 +1074,7 @@ namespace CrochetHub.Services.Implementations
                                     .FontSize(8).FontColor(Colors.Grey.Medium);
                             });
                         });
-                        col.Item().PaddingTop(4).LineHorizontal(1.5f).LineColor(Colors.Purple.Medium);
+                        col.Item().PaddingTop(4).LineHorizontal(1.5f).LineColor(BorderColor);
                         col.Item().Height(6);
                     });
 
@@ -1095,39 +1103,116 @@ namespace CrochetHub.Services.Implementations
                     page.DefaultTextStyle(x => x.FontFamily(Fonts.Arial));
 
                     page.Content()
-                        .Border(4).BorderColor(Colors.Purple.Medium)
+                        .Border(4).BorderColor(AccentColor)
                         .Padding(30)
                         .Column(col =>
                         {
-                            col.Item().AlignCenter().Text("✦  CrochetHub  ✦")
-                                .FontSize(13).FontColor(Colors.Purple.Lighten2).LetterSpacing(0.2f);
-                            col.Item().Height(18);
-                            col.Item().AlignCenter().Text(title)
-                                .Bold().FontSize(32).FontColor(Colors.Purple.Darken2);
-                            col.Item().Height(6);
-                            col.Item().AlignCenter().LineHorizontal(1).LineColor(Colors.Purple.Lighten2);
-                            col.Item().Height(24);
-                            col.Item().AlignCenter().Text(recipientLabel)
-                                .FontSize(14).FontColor(Colors.Grey.Darken2);
-                            col.Item().Height(8);
-                            col.Item().AlignCenter().Text(recipientName)
-                                .Bold().FontSize(28).FontColor(Colors.Purple.Darken1);
-                            col.Item().Height(20);
-                            col.Item().AlignCenter().Text(bodyText)
-                                .FontSize(14).FontColor(Colors.Grey.Darken2);
-                            col.Item().Height(10);
-                            col.Item().AlignCenter().Text(subjectName)
-                                .SemiBold().FontSize(18).FontColor(Colors.Purple.Medium);
-                            col.Item().Height(30);
+                            col.Item().AlignCenter()
+                            .Text("CrochetHub")
+                            .Bold()
+                            .FontSize(24)
+                            .FontColor(PrimaryColor);
+
+                            col.Item().AlignCenter()
+                                .Text("Online Learning and Pattern Development Platform")
+                                .FontSize(10)
+                                .FontColor(Colors.Grey.Darken1);
+
+                            col.Item().PaddingTop(10);
+                            col.Item().AlignCenter().LineHorizontal(1).LineColor(BorderColor);
+                            col.Item().PaddingTop(25);
+
+                            col.Item().AlignCenter()
+                                .Text(title)
+                                .Bold()
+                                .FontSize(30)
+                                .FontColor(PrimaryColor);
+
+                            col.Item().PaddingTop(20);
+
+                            col.Item().AlignCenter()
+                                .Text(recipientLabel)
+                                .FontSize(14)
+                                .FontColor(Colors.Grey.Darken2);
+
+                            col.Item().PaddingTop(10);
+
+                            col.Item().AlignCenter()
+                                .Text(recipientName)
+                                .Bold()
+                                .FontSize(28)
+                                .FontColor(TextColor);
+
+                            col.Item().PaddingTop(18);
+
+                            col.Item().AlignCenter()
+                                .Text(bodyText)
+                                .FontSize(14)
+                                .FontColor(TextColor);
+
+                            col.Item().PaddingTop(10);
+
+                            col.Item().AlignCenter()
+                                .Text(subjectName)
+                                .SemiBold()
+                                .FontSize(18)
+                                .FontColor(PrimaryColor);
+
+                            col.Item().PaddingTop(45);
+
+                            col.Item().Row(row =>
+                            {
+                                row.RelativeItem().Column(c =>
+                                {
+                                    c.Item().LineHorizontal(1).LineColor(BorderColor);
+
+                                    c.Item().PaddingTop(5)
+                                            .AlignCenter()
+                                            .Text("Ghania Majid")
+                                            .SemiBold()
+                                            .FontSize(11);
+                                    c.Item().AlignCenter()
+                                            .Text("Administrator")
+                                            .FontSize(9)
+                                            .FontColor(Colors.Grey.Darken1);
+                                });
+
+                                row.ConstantItem(80);
+
+                                row.RelativeItem().Column(c =>
+                                {
+                                    c.Item().LineHorizontal(1).LineColor(BorderColor);
+
+                                    c.Item().PaddingTop(5)
+                                            .AlignCenter()
+                                            .Text("Zainab Aftab")
+                                            .SemiBold()
+                                            .FontSize(11);
+                                    c.Item().AlignCenter()
+                                            .Text("Administrator")
+                                            .FontSize(9)
+                                            .FontColor(Colors.Grey.Darken1);
+                                });
+                            });
+
+                            col.Item().PaddingTop(30);
+
+                            col.Item().LineHorizontal(0.5f)
+                                .LineColor(Colors.Grey.Lighten2);
+
+                            col.Item().PaddingTop(8);
+
+                            col.Item().AlignCenter()
+                                .Text("This certificate has been officially issued by CrochetHub in recognition of achievement, academic progress, and contribution within the CrochetHub learning platform.")
+                                .FontSize(8)
+                                .FontColor(Colors.Grey.Medium);
+
+                            col.Item().PaddingTop(3);
+
                             col.Item().AlignCenter()
                                 .Text($"Issued on {date:MMMM dd, yyyy}")
-                                .FontSize(11).FontColor(Colors.Grey.Medium);
-                            col.Item().Height(20);
-                            col.Item().AlignCenter().LineHorizontal(0.5f).LineColor(Colors.Grey.Lighten3);
-                            col.Item().Height(6);
-                            col.Item().AlignCenter()
-                                .Text("This certificate is issued by CrochetHub — the online crochet learning platform.")
-                                .FontSize(8).FontColor(Colors.Grey.Lighten1);
+                                .FontSize(8)
+                                .FontColor(Colors.Grey.Medium);
                         });
                 });
             }).GeneratePdf();

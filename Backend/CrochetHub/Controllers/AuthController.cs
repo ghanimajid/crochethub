@@ -2,7 +2,6 @@
 using CrochetHub.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace CrochetHub.Controllers
 {
@@ -60,17 +59,24 @@ namespace CrochetHub.Controllers
         [Authorize]
         public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileDto dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var userIDClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIDClaim == null)
-                return Unauthorized();
+            if (dto.FirstName == null && dto.LastName == null && dto.Bio == null &&
+                dto.ProfilePicture == null && dto.DateOfBirth == null && dto.GenderID == null)
+                return BadRequest(new { message = "No fields provided to update." });
 
-            var userID = int.Parse(userIDClaim);
-            var result = await _authService.UpdateProfileAsync(userID, dto);
-            if (!result)
-                return NotFound(new { message = "User not found." });
+            if (dto.FirstName != null && dto.FirstName.Trim().Length == 0)
+                return BadRequest(new { message = "First name cannot be empty." });
+            if (dto.LastName != null && dto.LastName.Trim().Length == 0)
+                return BadRequest(new { message = "Last name cannot be empty." });
+            if (dto.DateOfBirth.HasValue && dto.DateOfBirth.Value.Date >= DateTime.UtcNow.Date)
+                return BadRequest(new { message = "Date of birth cannot be today or in the future." });
+
+            var userID = GetUserID();
+            if (userID == null) return Unauthorized();
+
+            var result = await _authService.UpdateProfileAsync(userID.Value, dto);
+            if (!result) return BadRequest(new { message = "Failed to update profile. Check gender ID or provided values." });
 
             return Ok(new { message = "Profile updated successfully." });
         }

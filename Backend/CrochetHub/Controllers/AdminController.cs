@@ -116,49 +116,72 @@ namespace CrochetHub.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
             if (!IsAdmin()) return Forbid();
+            if (id <= 0) return BadRequest(new { message = "Invalid user ID." });
 
-            if (id <= 0)
-                return BadRequest(new { message = "Invalid user ID." });
-
-            // Prevent changing own role
             var adminID = GetUserID();
             if (adminID == null) return Unauthorized();
-
-            if (adminID == id)
-                return BadRequest(new { message = "You cannot change your own role." });
+            if (adminID == id) return BadRequest(new { message = "You cannot change your own role." });
 
             var user = await _context.Users
                 .Include(u => u.Role)
+                .Include(u => u.Student)
+                    .ThenInclude(s => s!.CourseEnrollments)
+                .Include(u => u.Instructor)
+                    .ThenInclude(i => i!.Courses)
                 .FirstOrDefaultAsync(u => u.UserID == id);
+
             if (user == null)
                 return NotFound(new { message = $"User with ID {id} not found." });
 
             var newRole = await _context.Lookups
-               .FirstOrDefaultAsync(l => l.LookupID == dto.RoleID && l.Category == "ROLE");
+                .FirstOrDefaultAsync(l => l.LookupID == dto.RoleID && l.Category == "ROLE");
             if (newRole == null)
-                return BadRequest(new { message = "Invalid role ID. Must reference a valid role in the system." });
+                return BadRequest(new { message = "Invalid role ID." });
 
             if (user.RoleID == dto.RoleID)
                 return BadRequest(new { message = $"User already has the role '{newRole.Value}'." });
 
             var oldRoleName = user.Role?.Value ?? "Unknown";
+
+            if (user.Instructor != null && user.Instructor.Courses.Any() && newRole.Value != "Instructor")
+                return BadRequest(new
+                {
+                    message = $"Cannot change role. This instructor has {user.Instructor.Courses.Count} active course(s). " +
+                              "Delete or reassign courses first."
+                });
+
+            if (user.Student != null && user.Student.CourseEnrollments.Any() && newRole.Value == "Instructor")
+                return BadRequest(new
+                {
+                    message = $"Cannot promote to Instructor. This student has {user.Student.CourseEnrollments.Count} active enrollment(s). " +
+                              "All enrollment and progress data would be lost. Remove enrollments first."
+                });
+
+            if (newRole.Value == "Admin")
+            {
+                if (user.Student != null && user.Student.CourseEnrollments.Any())
+                    return BadRequest(new
+                    {
+                        message = $"Cannot promote to Admin. This student has {user.Student.CourseEnrollments.Count} active enrollment(s). " +
+                                  "Remove enrollments first."
+                    });
+
+                if (user.Instructor != null && user.Instructor.Courses.Any())
+                    return BadRequest(new
+                    {
+                        message = $"Cannot promote to Admin. This instructor has {user.Instructor.Courses.Count} active course(s). " +
+                                  "Delete or reassign courses first."
+                    });
+            }
+
             user.RoleID = dto.RoleID;
             await _context.SaveChangesAsync();
 
-            // AUDIT LOG
-            await _auditService.LogAsync(
-                adminID.Value, "UPDATE", "User", id,
-                oldValue: $"Role: {oldRoleName}",
-                newValue: $"Role: {newRole.Value}"
-            );
-
             if (newRole.Value == "Instructor")
             {
-                // Remove student row if exists
                 var student = await _context.Students.FindAsync(id);
                 if (student != null) _context.Students.Remove(student);
 
-                // Add instructor row if not exists
                 if (!await _context.Instructors.AnyAsync(i => i.InstructorID == id))
                     _context.Instructors.Add(new Instructor { InstructorID = id });
 
@@ -170,13 +193,6 @@ namespace CrochetHub.Controllers
                     .Include(i => i.Courses)
                     .FirstOrDefaultAsync(i => i.InstructorID == id);
 
-                // Block if instructor has courses
-                if (instructor != null && instructor.Courses.Any())
-                    return BadRequest(new
-                    {
-                        message = $"Cannot change role. Instructor has {instructor.Courses.Count} active course(s). Delete or reassign courses first."
-                    });
-
                 if (instructor != null) _context.Instructors.Remove(instructor);
 
                 if (!await _context.Students.AnyAsync(s => s.StudentID == id))
@@ -184,8 +200,23 @@ namespace CrochetHub.Controllers
 
                 await _context.SaveChangesAsync();
             }
-            return Ok(new { message = $"User role updated to '{newRole.Value}' successfully." });
+            else if (newRole.Value == "Admin")
+            {
+                var student = await _context.Students.FindAsync(id);
+                if (student != null) _context.Students.Remove(student);
 
+                var instructor = await _context.Instructors.FindAsync(id);
+                if (instructor != null) _context.Instructors.Remove(instructor);
+
+                await _context.SaveChangesAsync();
+            }
+
+            await _auditService.LogAsync(
+                adminID.Value, "UPDATE", "User", id,
+                oldValue: $"Role: {oldRoleName}",
+                newValue: $"Role: {newRole.Value}");
+
+            return Ok(new { message = $"User role updated to '{newRole.Value}' successfully." });
         }
 
         // DELETE api/admin/users/{id}
@@ -232,6 +263,14 @@ namespace CrochetHub.Controllers
                               $"Delete or reassign courses first."
                 });
 
+            // Block if user has created patterns (User -> Pattern is OnDelete Restrict)
+            var patternCount = await _context.Patterns.CountAsync(p => p.CreatedBy == id);
+            if (patternCount > 0)
+                return BadRequest(new
+                {
+                    message = $"Cannot delete this user. They have created {patternCount} pattern(s). Delete those patterns first."
+                });
+
             var userName = $"{user.Person?.FirstName} {user.Person?.LastName}".Trim();
 
             await _auditService.LogAsync(
@@ -240,9 +279,12 @@ namespace CrochetHub.Controllers
                 newValue: null
             );
 
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
+            if (user.Person != null)
+                _context.Persons.Remove(user.Person);
 
+            _context.Users.Remove(user);
+
+            await _context.SaveChangesAsync();
             return Ok(new { message = $"User '{user.Person?.FirstName} {user.Person?.LastName}' deleted successfully." });
         }
 
@@ -295,7 +337,7 @@ namespace CrochetHub.Controllers
             var replyCount = thread.Replies.Count;
             var threadTitle = thread.Title;
 
-            // AUDIT LOG — log before deletion
+            // AUDIT LOG log before deletion
             await _auditService.LogAsync(
                 adminID.Value, "DELETE", "ForumThread", id,
                 oldValue: $"Thread '{threadTitle}' with {replyCount} replies deleted",
