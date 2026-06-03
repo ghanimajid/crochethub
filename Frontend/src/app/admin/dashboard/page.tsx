@@ -32,6 +32,7 @@ export default function AdminDashboard() {
       .finally(() => setLoading(false))
   }, [isLoggedIn, user, router])
 
+  
   const statCards = stats ? [
     { label: 'Total Users', value: stats.totalUsers, color: '#7C2D3E' },
     { label: 'Students', value: stats.totalStudents, color: 'var(--teal)' },
@@ -63,7 +64,7 @@ export default function AdminDashboard() {
             Dashboard
           </h1>
         </div>
-
+        
         {/* Stats grid */}
         {loading ? (
           <p style={{ fontFamily: 'var(--font-inter)', color: 'var(--text-muted)' }}>Loading...</p>
@@ -109,6 +110,7 @@ export default function AdminDashboard() {
             { title: 'Manage Users', desc: 'View, edit roles and delete users', href: '/admin/users', color: '#7C2D3E' },
             { title: 'Manage Courses', desc: 'View and delete all courses', href: '/admin/courses', color: 'var(--teal)' },
             { title: 'Manage Forum', desc: 'Moderate forum threads', href: '/admin/forum', color: '#2D6B5E' },
+            { title: 'Manage Patterns', desc: 'View and delete all patterns', href: '/admin/patterns', color: '#B45309' },
           ].map((item, i) => (
             <Link key={i} href={item.href} style={{ textDecoration: 'none' }}>
               <div style={{

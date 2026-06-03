@@ -94,34 +94,66 @@ export default function PatternsPage() {
         padding: '48px',
       }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <p style={{
-            fontFamily: 'var(--font-inter)',
-            fontSize: '0.75rem',
-            color: 'var(--teal)',
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase',
-            fontWeight: '600',
-            marginBottom: '12px',
+
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-end',
+            marginBottom: '24px',
+            gap: '16px',
+            flexWrap: 'wrap',
           }}>
-            {patterns.length} Patterns Available
-          </p>
-          <h1 style={{
-            fontFamily: 'var(--font-cormorant)',
-            fontSize: '3.5rem',
-            fontWeight: '700',
-            color: 'var(--text)',
-            marginBottom: '8px',
-          }}>
-            Pattern Library
-          </h1>
-          <p style={{
-            fontFamily: 'var(--font-inter)',
-            color: 'var(--text-muted)',
-            fontSize: '1rem',
-            marginBottom: '32px',
-          }}>
-            Find your next masterpiece among our hand-crafted guides
-          </p>
+            <div>
+              <p style={{
+                fontFamily: 'var(--font-inter)',
+                fontSize: '0.75rem',
+                color: 'var(--teal)',
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                fontWeight: '600',
+                marginBottom: '12px',
+              }}>
+                {patterns.length} Patterns Available
+              </p>
+
+              <h1 style={{
+                fontFamily: 'var(--font-cormorant)',
+                fontSize: '3.5rem',
+                fontWeight: '700',
+                color: 'var(--text)',
+                marginBottom: '8px',
+              }}>
+                Pattern Library
+              </h1>
+
+              <p style={{
+                fontFamily: 'var(--font-inter)',
+                color: 'var(--text-muted)',
+                fontSize: '1rem',
+              }}>
+                Find your next masterpiece among our hand-crafted guides
+              </p>
+            </div>
+
+            {isLoggedIn && (
+              <Link
+                href="/patterns/new"
+                style={{
+                  backgroundColor: '#7C2D3E',
+                  color: 'white',
+                  padding: '12px 24px',
+                  borderRadius: '100px',
+                  fontFamily: 'var(--font-inter)',
+                  fontWeight: '500',
+                  fontSize: '0.9rem',
+                  textDecoration: 'none',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                + Create Pattern
+              </Link>
+            )}
+          </div>
 
           <input
             type="text"
@@ -167,6 +199,7 @@ export default function PatternsPage() {
               </button>
             ))}
           </div>
+
         </div>
       </div>
 

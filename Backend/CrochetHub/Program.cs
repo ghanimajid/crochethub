@@ -11,6 +11,8 @@ using Microsoft.OpenApi.Models;
 using QuestPDF.Infrastructure;
 using System.Text;
 
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Database
