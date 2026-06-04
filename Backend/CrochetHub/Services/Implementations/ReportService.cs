@@ -1104,7 +1104,7 @@ namespace CrochetHub.Services.Implementations
 
                     page.Content()
                         .Border(4).BorderColor(AccentColor)
-                        .Padding(30)
+                        .Padding(40)
                         .Column(col =>
                         {
                             col.Item().AlignCenter()
@@ -1120,7 +1120,7 @@ namespace CrochetHub.Services.Implementations
 
                             col.Item().PaddingTop(10);
                             col.Item().AlignCenter().LineHorizontal(1).LineColor(BorderColor);
-                            col.Item().PaddingTop(25);
+                            col.Item().PaddingTop(35);
 
                             col.Item().AlignCenter()
                                 .Text(title)
@@ -1158,7 +1158,7 @@ namespace CrochetHub.Services.Implementations
                                 .FontSize(18)
                                 .FontColor(PrimaryColor);
 
-                            col.Item().PaddingTop(45);
+                            col.Item().PaddingTop(70);
 
                             col.Item().Row(row =>
                             {
@@ -1195,12 +1195,12 @@ namespace CrochetHub.Services.Implementations
                                 });
                             });
 
-                            col.Item().PaddingTop(30);
+                            col.Item().PaddingTop(42);
 
                             col.Item().LineHorizontal(0.5f)
                                 .LineColor(Colors.Grey.Lighten2);
 
-                            col.Item().PaddingTop(8);
+                            col.Item().PaddingTop(3);
 
                             col.Item().AlignCenter()
                                 .Text("This certificate has been officially issued by CrochetHub in recognition of achievement, academic progress, and contribution within the CrochetHub learning platform.")
