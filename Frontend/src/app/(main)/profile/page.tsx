@@ -32,52 +32,81 @@ function EnrolledCourses() {
     <p style={{ fontFamily: 'var(--font-inter)', color: 'var(--text-muted)' }}>Loading...</p>
   )
 
-  if (enrollments.length === 0) return (
-    <div style={{
+  if (enrollments.length === 0) {
+    return (
+      <div style={{ textAlign: 'center', padding: '48px' }}>
+        <p style={{
+          fontFamily: 'var(--font-inter)',
+          color: 'var(--text-muted)',
+        }}>
+          You are not enrolled in any courses yet.
+        </p>
+      </div>
+    )
+  }
+  console.log('Enrollments state:', enrollments)
+  return (
+  <div
+    style={{
       display: 'grid',
       gridTemplateColumns: 'repeat(2, 1fr)',
       gap: '16px',
-    }}>
-      {enrollments.map((enrollment: any, i: number) => (
-        <a key={i} href={`/courses/${enrollment.courseID}`} style={{ textDecoration: 'none' }}>
-          <div style={{
+    }}
+  >
+    {enrollments.map((enrollment: any, i: number) => (
+      <a
+        key={i}
+        href={`/courses/${enrollment.courseID}`}
+        style={{ textDecoration: 'none' }}
+      >
+        <div
+          style={{
             backgroundColor: 'white',
             borderRadius: '16px',
             overflow: 'hidden',
             border: '1px solid var(--border)',
-          }}>
-            <div style={{
-              height: '140px',
-              backgroundImage: enrollment.thumbnailURL
-                ? `url(${enrollment.thumbnailURL})`
-                : undefined,
-              backgroundColor: enrollment.thumbnailURL ? undefined : 'var(--teal)',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-            }} />
-            <div style={{ padding: '16px' }}>
-              <p style={{
+          }}
+        >
+          {enrollment.thumbnailURL && (
+            <div
+              style={{
+                height: '140px',
+                backgroundImage: `url(${enrollment.thumbnailURL})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }}
+            />
+          )}
+
+          <div style={{ padding: '16px' }}>
+            <p
+              style={{
                 fontFamily: 'var(--font-cormorant)',
                 fontSize: '1.1rem',
                 fontWeight: '600',
                 color: 'var(--text)',
                 marginBottom: '4px',
-              }}>
-                {enrollment.courseTitle || enrollment.courseName || enrollment.title}
-              </p>
-              <p style={{
+              }}
+            >
+              {enrollment.courseTitle}
+            </p>
+
+            <p
+              style={{
                 fontFamily: 'var(--font-inter)',
                 fontSize: '0.78rem',
                 color: 'var(--text-muted)',
-              }}>
-                {enrollment.difficulty}
-              </p>
-            </div>
+              }}
+            >
+              {enrollment.difficulty || 'Course'}
+            </p>
           </div>
-        </a>
-      ))}
-    </div>
-  )
+        </div>
+      </a>
+    ))}
+  </div>
+)
+  
 }
 
 function SavedPatterns() {

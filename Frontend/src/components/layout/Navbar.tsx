@@ -96,74 +96,213 @@ export default function Navbar() {
       : studentReports
 
   async function handleDownloadReport(endpoint: string) {
-    if (endpoint === 'COURSE_CERT') {
-      setReportsOpen(false)
-
-      fetch('https://localhost:7167/api/Student/enrollments', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-        .then(r => r.json())
-        .then(data => setCourses(Array.isArray(data) ? data : []))
-        .catch(() => { })
-
-      setShowCourseInput(true)
-      return
-    }
-
-    if (endpoint === 'TOP_CONTRIBUTOR') {
-      setReportsOpen(false)
-
-      fetch('https://localhost:7167/api/Admin/users', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-        .then(r => r.json())
-        .then(data => setUsers(Array.isArray(data) ? data : []))
-        .catch(() => { })
-
-      setShowContribInput(true)
-      return
-    }
+  if (endpoint === 'COURSE_CERT') {
     setReportsOpen(false)
-    try {
-      const response = await fetch(`https://localhost:7167/api${endpoint}`, {
+
+    fetch('https://localhost:7167/api/Student/enrollments', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+      .then(r => r.json())
+      .then(data => setCourses(Array.isArray(data) ? data : []))
+      .catch(() => { })
+
+    setShowCourseInput(true)
+    return
+  }
+
+  if (endpoint === 'TOP_CONTRIBUTOR') {
+    setReportsOpen(false)
+
+    fetch('https://localhost:7167/api/Admin/users', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+      .then(r => r.json())
+      .then(data => setUsers(Array.isArray(data) ? data : []))
+      .catch(() => { })
+
+    setShowContribInput(true)
+    return
+  }
+
+  setReportsOpen(false)
+
+  try {
+    const response = await fetch(`https://localhost:7167/api${endpoint}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/pdf',
+      },
+    })
+
+    if (!response.ok) throw new Error(`Error: ${response.status}`)
+
+    const disposition = response.headers.get('content-disposition')
+    let filename = ''
+
+    if (disposition && disposition.includes('filename=')) {
+      filename = disposition
+        .split('filename=')[1]
+        .replace(/['"]/g, '')
+        .trim()
+    }
+
+    if (!filename) {
+      const date = new Date()
+        .toISOString()
+        .slice(0, 10)
+        .replace(/-/g, '')
+
+      const reportName = endpoint
+        .split('/')
+        .pop()!
+        .split('-')
+        .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join('_')
+
+      filename = `CrochetHub_${reportName}_${date}.pdf`
+    }
+
+    const blob = await response.blob()
+    const url = window.URL.createObjectURL(blob)
+
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+
+    window.URL.revokeObjectURL(url)
+  } catch (err) {
+    console.error('Report download failed:', err)
+  }
+}
+
+  async function downloadCourseCert() {
+  if (!courseIDInput) return
+
+  try {
+    const response = await fetch(
+      `https://localhost:7167/api/Report/certificate/course-completion/${courseIDInput}`,
+      {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/pdf',
         },
-      })
-      if (!response.ok) throw new Error(`Error: ${response.status}`)
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${endpoint.split('/').pop()}.pdf`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      window.URL.revokeObjectURL(url)
-    } catch (err) {
-      console.error('Report download failed:', err)
-    }
-  }
+      }
+    )
 
-  async function downloadCourseCert() {
-    if (!courseIDInput) return
-    await handleDownloadReport(`/Report/certificate/course-completion/${courseIDInput}`)
+    if (!response.ok) {
+      const t = await response.text()
+      alert(`Error: ${t}`)
+      return
+    }
+
+    const disposition = response.headers.get('content-disposition')
+    let filename = ''
+
+    if (disposition && disposition.includes('filename=')) {
+      filename = disposition
+        .split('filename=')[1]
+        .replace(/['"]/g, '')
+        .trim()
+    }
+
+    if (!filename) {
+      const date = new Date()
+        .toISOString()
+        .slice(0, 10)
+        .replace(/-/g, '')
+
+      filename = `CrochetHub_Course_Certificate_${date}.pdf`
+    }
+
+    const blob = await response.blob()
+    const url = window.URL.createObjectURL(blob)
+
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+
+    window.URL.revokeObjectURL(url)
+
     setShowCourseInput(false)
     setCourseIDInput('')
+  } catch (err) {
+    alert('Failed to download certificate')
   }
+}
 
   async function downloadContribCert() {
-    if (!userIDInput) return
-    await handleDownloadReport(`/Report/certificate/top-contributor/${userIDInput}`)
+  if (!userIDInput) return
+
+  try {
+    const response = await fetch(
+      `https://localhost:7167/api/Report/certificate/top-contributor/${userIDInput}`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/pdf',
+        },
+      }
+    )
+
+    if (!response.ok) {
+      const t = await response.text()
+      alert(`Error: ${t}`)
+      return
+    }
+
+    const disposition = response.headers.get('content-disposition')
+    let filename = ''
+
+    if (disposition && disposition.includes('filename=')) {
+      filename = disposition
+        .split('filename=')[1]
+        .replace(/['"]/g, '')
+        .trim()
+    }
+
+    if (!filename) {
+      const date = new Date()
+        .toISOString()
+        .slice(0, 10)
+        .replace(/-/g, '')
+
+      filename = `CrochetHub_Top_Contributor_Certificate_${date}.pdf`
+    }
+
+    const blob = await response.blob()
+    const url = window.URL.createObjectURL(blob)
+
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+
+    window.URL.revokeObjectURL(url)
+
     setShowContribInput(false)
     setUserIDInput('')
+  } catch (err) {
+    alert('Failed to download certificate')
   }
+}
 
   return (
     <nav style={{
