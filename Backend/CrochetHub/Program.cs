@@ -82,7 +82,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins("https://crochethub.vercel.app")
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
