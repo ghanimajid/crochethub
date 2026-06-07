@@ -335,9 +335,10 @@ BEGIN
         VALUES (threadOwner, CONCAT('New reply to your thread'), 15, FALSE, NOW());
     END IF;
 END$$
+
 -- TRIGGER 5 Log every course enrollment in AuditLog
 CREATE TRIGGER trg_audit_enrollment
-AFTER INSERT ON CourseEnrollment
+AFTER INSERT ON courseenrollment
 FOR EACH ROW
 BEGIN
     DECLARE actionID INT;
@@ -358,7 +359,7 @@ END$$
 
 -- TRIGGER 6 Prevent completion percentage from decreasing
 CREATE TRIGGER trg_prevent_completion_downgrade
-BEFORE UPDATE ON CourseEnrollment
+BEFORE UPDATE ON courseenrollment
 FOR EACH ROW
 BEGIN
     IF NEW.CompletionPercentage < OLD.CompletionPercentage THEN
@@ -369,7 +370,7 @@ END$$
 
 -- TRIGGER 7 Auto create Student subtype record when a user registers as Student
 CREATE TRIGGER trg_auto_create_student
-AFTER INSERT ON Users
+AFTER INSERT ON users
 FOR EACH ROW
 BEGIN
     DECLARE studentRoleID INT;
@@ -385,7 +386,7 @@ END$$
 
 -- TRIGGER 8 - Validate pattern material quantity is not empty
 CREATE TRIGGER trg_validate_material_quantity
-BEFORE INSERT ON PatternMaterial
+BEFORE INSERT ON patternmaterial
 FOR EACH ROW
 BEGIN
     IF NEW.Quantity IS NULL OR CHAR_LENGTH(TRIM(NEW.Quantity)) = 0 THEN
