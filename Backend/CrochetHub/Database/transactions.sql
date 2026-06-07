@@ -28,7 +28,7 @@ BEGIN
     END;
 
     -- Check email uniqueness before starting transaction
-    IF EXISTS (SELECT 1 FROM user WHERE Email = p_Email) THEN
+    IF EXISTS (SELECT 1 FROM usera WHERE Email = p_Email) THEN
         SET p_Success = 0;
         SET p_Message = 'Email already exists.';
     ELSE
@@ -41,7 +41,7 @@ BEGIN
         SET v_PersonID = LAST_INSERT_ID();
 
         -- Step 2: Insert User
-        INSERT INTO user (UserID, Email, PasswordHash, RoleID)
+        INSERT INTO usera (UserID, Email, PasswordHash, RoleID)
         VALUES (v_PersonID, p_Email, p_PasswordHash, p_RoleID);
 
         -- Step 3: Insert Student or Instructor subtype
@@ -91,7 +91,7 @@ BEGIN
     IF p_UserID = p_AdminID THEN
         SET p_Success = 0;
         SET p_Message = 'Cannot delete your own account.';
-    ELSEIF NOT EXISTS (SELECT 1 FROM user WHERE UserID = p_UserID) THEN
+    ELSEIF NOT EXISTS (SELECT 1 FROM users WHERE UserID = p_UserID) THEN
         SET p_Success = 0;
         SET p_Message = 'User not found.';
     ELSE
@@ -114,7 +114,7 @@ BEGIN
             INSERT INTO user_backup
                 (UserID, Email, PasswordHash, ProfilePicture, Bio, RoleID, CreatedAt, BackupAction)
             SELECT UserID, Email, PasswordHash, ProfilePicture, Bio, RoleID, CreatedAt, 'DELETE'
-            FROM user WHERE UserID = p_UserID;
+            FROM users WHERE UserID = p_UserID;
 
             -- Delete person (cascades to user)
             DELETE FROM person WHERE PersonID = p_UserID;
