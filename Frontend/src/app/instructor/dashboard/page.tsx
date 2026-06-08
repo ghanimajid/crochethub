@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { instructorService } from '@/services/instructorService'
+import config from '@/config'
 
 interface Course {
     courseID: number
@@ -28,7 +29,7 @@ export default function InstructorDashboard() {
 
         Promise.all([
             instructorService.getCourses(),
-            fetch('https://localhost:7167/api/Course').then(r => r.json())
+            fetch(`${config.API_BASE_URL}/Course`).then(r => r.json())
         ])
             .then(([instructorData, allCourses]) => {
                 console.log('Instructor courses data:', JSON.stringify(instructorData))

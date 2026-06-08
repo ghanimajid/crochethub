@@ -1,6 +1,7 @@
 'use client'
 import { createContext, useContext, useState, useEffect } from 'react'
 import type { ReactNode } from 'react'
+import config from '@/config'
 
 interface User {
     userId: number
@@ -39,8 +40,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (role === 'Admin') return
 
             const endpoint = role === 'Instructor'
-                ? 'https://localhost:7167/api/Instructor/profile'
-                : 'https://localhost:7167/api/Student/profile'
+                ? `${config.API_BASE_URL}/Instructor/profile`
+                : `${config.API_BASE_URL}/Student/profile`
 
             const response = await fetch(endpoint, {
                 headers: {

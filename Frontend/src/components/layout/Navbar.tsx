@@ -4,7 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useAuth } from '@/context/AuthContext'
 import { apiFetch } from '@/services/api'
-
+import config from '@/config'
 const studentLinks = [
   { label: 'Courses', href: '/courses' },
   { label: 'Patterns', href: '/patterns' },
@@ -99,7 +99,7 @@ export default function Navbar() {
   if (endpoint === 'COURSE_CERT') {
     setReportsOpen(false)
 
-    fetch('https://localhost:7167/api/Student/enrollments', {
+      fetch(`${config.API_BASE_URL}/Student/enrollments`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -115,7 +115,7 @@ export default function Navbar() {
   if (endpoint === 'TOP_CONTRIBUTOR') {
     setReportsOpen(false)
 
-    fetch('https://localhost:7167/api/Admin/users', {
+      fetch(`${config.API_BASE_URL}/Admin/users`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -131,7 +131,7 @@ export default function Navbar() {
   setReportsOpen(false)
 
   try {
-    const response = await fetch(`https://localhost:7167/api${endpoint}`, {
+      const response = await fetch(`${ config.API_BASE_URL }${endpoint}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -189,7 +189,7 @@ export default function Navbar() {
 
   try {
     const response = await fetch(
-      `https://localhost:7167/api/Report/certificate/course-completion/${courseIDInput}`,
+        `${ config.API_BASE_URL }/Report/certificate/course-completion/${courseIDInput}`,
       {
         method: 'GET',
         headers: {
@@ -249,7 +249,7 @@ export default function Navbar() {
 
   try {
     const response = await fetch(
-      `https://localhost:7167/api/Report/certificate/top-contributor/${userIDInput}`,
+        `${ config.API_BASE_URL }/Report/certificate/top-contributor/${userIDInput}`,
       {
         method: 'GET',
         headers: {

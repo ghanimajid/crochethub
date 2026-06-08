@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
 import { apiFetch } from '@/services/api'
+import config from '@/config'
 
 
 function EnrolledCourses() {
@@ -13,7 +14,7 @@ function EnrolledCourses() {
   useEffect(() => {
     Promise.all([
       apiFetch('/Student/enrollments'),
-      fetch('https://localhost:7167/api/Course').then(r => r.json())
+        fetch(`${config.API_BASE_URL}/Course`).then(r => r.json())
     ])
       .then(([enrollData, coursesData]) => {
         const enrollments = Array.isArray(enrollData) ? enrollData : []

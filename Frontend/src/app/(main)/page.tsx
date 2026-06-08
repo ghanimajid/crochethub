@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
 import { studentService } from '@/services/studentService'
 import { useRouter } from 'next/navigation'
-
+import config from '@/config'
 export default function HomePage() {
   const { isLoggedIn, user } = useAuth()
   const router = useRouter()
@@ -20,7 +20,7 @@ export default function HomePage() {
   useEffect(() => {
 
     if (isLoggedIn) {
-      fetch('https://localhost:7167/api/Course')
+        fetch(`${config.API_BASE_URL}/Course`)
         .then(r => r.json())
         .then(data =>
           setFeaturedCourses(Array.isArray(data) ? data.slice(0, 3) : [])
@@ -30,7 +30,7 @@ export default function HomePage() {
       if (user?.role === 'Student') {
         Promise.all([
           studentService.getDashboard(),
-          fetch('https://localhost:7167/api/Course').then(r => r.json())
+            fetch(`${config.API_BASE_URL}/Course`).then(r => r.json())
         ])
           .then(([dashData, coursesData]) => {
             const courses = Array.isArray(coursesData) ? coursesData : []
@@ -52,7 +52,7 @@ export default function HomePage() {
           })
           .catch(() => { })
 
-        fetch('https://localhost:7167/api/Favorite', {
+          fetch(`${config.API_BASE_URL}/Favorite`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
@@ -64,14 +64,14 @@ export default function HomePage() {
           .catch(() => { })
       }
     } else {
-      fetch('https://localhost:7167/api/Course')
+        fetch(`${config.API_BASE_URL}/Course`)
         .then(r => r.json())
         .then(data =>
           setFeaturedCourses(Array.isArray(data) ? data.slice(0, 3) : [])
         )
         .catch(() => { })
     }
-    fetch('https://localhost:7167/api/Course')
+      fetch(`${config.API_BASE_URL}/Course`)
       .then(r => r.json())
       .then(data => {
         if (Array.isArray(data)) {
