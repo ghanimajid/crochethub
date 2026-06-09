@@ -344,7 +344,7 @@ BEGIN
     DECLARE actionID INT;
 
     SELECT LookupID INTO actionID
-    FROM Lookup WHERE Value = 'INSERT' AND Category = 'ACTION';
+    FROM lookup WHERE Value = 'INSERT' AND Category = 'ACTION';
 
     INSERT INTO AuditLog (UserID, ActionID, EntityType, EntityID, NewValue, Timestamp)
     VALUES (
@@ -376,7 +376,7 @@ BEGIN
     DECLARE studentRoleID INT;
 
     SELECT LookupID INTO studentRoleID
-    FROM Lookup WHERE Value = 'Student' AND Category = 'ROLE';
+    FROM lookup WHERE Value = 'Student' AND Category = 'ROLE';
 
     IF NEW.RoleID = studentRoleID THEN
         INSERT INTO Student (StudentID, EnrollmentDate)
