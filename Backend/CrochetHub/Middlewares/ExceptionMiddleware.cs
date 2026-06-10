@@ -22,11 +22,23 @@ namespace CrochetHub.Middlewares
             catch (Exception ex)
             {
                 _logger.LogError(ex, ex.Message);
+
                 context.Response.ContentType = "application/json";
                 context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
-                var response = new { message = "An unexpected error occurred.", detail = ex.Message };
-                await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+                var detail =
+                    ex.InnerException?.InnerException?.Message ??
+                    ex.InnerException?.Message ??
+                    ex.Message;
+
+                var response = new
+                {
+                    message = "An unexpected error occurred.",
+                    detail
+                };
+
+                await context.Response.WriteAsync(
+                    JsonSerializer.Serialize(response));
             }
         }
     }
